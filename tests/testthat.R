@@ -1,2 +1,4 @@
-# This file is required by the testthat package to run tests efficiently
+library(testthat)
+library(spiR)
 
+test_check("spiR")
