@@ -31,6 +31,18 @@ specified version and writes the result to the on-disk inventory cache.
 Useful when the remote repository has been updated and you want to
 refresh before the automatic 30-day TTL expires.
 }
+\details{
+For reproducible workflows, call \code{spi_update_inventory()} explicitly
+before distributing analysis code rather than relying on the automatic
+30-day TTL refresh of the internal cache.
+}
+\section{Development status}{
+
+This function depends on the \code{github-tree-crawler} milestone. Calling
+it on the current development build will error with class
+\code{"spi_not_implemented"}.
+}
+
 \examples{
 \dontrun{
 # Refresh the default version

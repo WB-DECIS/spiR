@@ -91,12 +91,7 @@ spi_get <- function(type = "data",
 
   # --- Input validation ---------------------------------------------------
 
-  if (!is.character(version) || length(version) != 1L || !nzchar(version)) {
-    cli::cli_abort(c(
-      "{.arg version} must be a single non-empty character string.",
-      "x" = "You supplied a {.cls {class(version)[1L]}}."
-    ))
-  }
+  .spi_validate_version(version)
 
   if (!is.null(country)) {
     if (!is.character(country) || anyNA(country))

@@ -6,6 +6,31 @@ SPI_GITHUB_BASE <- "https://raw.githubusercontent.com/worldbank/SPI"
 # Package-level in-session cache, keyed on "version|file_path".
 .spi_cache <- new.env(parent = emptyenv())
 
+# ---------------------------------------------------------------------------
+# Shared version validation (used by spi_download, spi_get, and inventory)
+# ---------------------------------------------------------------------------
+
+#' Validate the `version` argument for SPI functions
+#'
+#' Shared guard that enforces a consistent contract on the `version` argument
+#' across `spi_download()`, `spi_get()`, `spi_update_inventory()`,
+#' `spi_clear_inventory()`, and `.spi_get_inventory()`. Centralising the
+#' check here ensures that future changes (e.g. adding a length limit or
+#' branch-name validation) are applied in one place.
+#'
+#' @param version The value to validate.
+#' @return `version`, invisibly, if valid.
+#' @keywords internal
+.spi_validate_version <- function(version) {
+  if (!is.character(version) || length(version) != 1L || !nzchar(version)) {
+    cli::cli_abort(c(
+      "{.arg version} must be a single non-empty character string.",
+      "x" = "You supplied a {.cls {class(version)[1L]}} of length {length(version)}."
+    ))
+  }
+  invisible(version)
+}
+
 #' Clear the spiR in-session download cache
 #'
 #' Removes all cached SPI data downloaded in the current R session.
@@ -37,12 +62,7 @@ spi_clear_cache <- function() {
 #' @return A `data.table`.
 #' @keywords internal
 spi_download <- function(file_path, version = "master") {
-  if (!is.character(version) || length(version) != 1L || !nzchar(version)) {
-    cli::cli_abort(c(
-      "{.arg version} must be a single non-empty character string.",
-      "x" = "You supplied a {.cls {class(version)[1L]}}."
-    ))
-  }
+  .spi_validate_version(version)
 
   cache_key <- paste0(version, "|", file_path)
   if (exists(cache_key, envir = .spi_cache, inherits = FALSE)) {

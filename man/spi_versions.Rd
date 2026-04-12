@@ -15,6 +15,10 @@ Queries the GitHub API for all branches in the World Bank SPI repository.
 Each branch corresponds to a version of the SPI data that can be passed
 as the \code{version} argument to \code{\link[=spi_get]{spi_get()}}.
 }
+\details{
+If the repository has more than 100 branches, the list may be incomplete
+due to GitHub API pagination limits; a warning is issued in this case.
+}
 \examples{
 \dontrun{
 spi_versions()

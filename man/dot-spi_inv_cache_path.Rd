@@ -7,13 +7,17 @@
 .spi_inv_cache_path(version)
 }
 \arguments{
-\item{version}{Character. Branch name (e.g. \code{"master"}, \code{"SPI2023"}).}
+\item{version}{Character. Branch name (e.g. \code{"master"}, \code{"SPI2023"}).
+Must not contain \code{/} or \verb{\\\\}.}
 }
 \value{
 Character scalar: path to \verb{tree_\{version\}.rds} inside the cache
 directory.
 }
 \description{
-Build the absolute path to a version's inventory cache file
+Constructs the cache file path and validates that \code{version} does not
+contain path separators (\code{/} or \verb{\\\\}), protecting against path traversal
+attacks. Thin wrapper so tests can exercise path construction in
+isolation.
 }
 \keyword{internal}

@@ -65,9 +65,10 @@ identify_id_columns <- function(dt) {
 #' @return A `data.table` with only the relevant columns.
 #' @keywords internal
 filter_columns_by_pattern <- function(dt, pattern) {
-  id_cols       <- identify_id_columns(dt)
-  indicator_cols <- names(dt)[grepl(pattern, names(dt))]
-  dt[, union(id_cols, indicator_cols), with = FALSE]
+  cols         <- names(dt)
+  is_id        <- !grepl("^SPI\\.D[0-9]|^RAW\\.D[0-9]", cols)
+  is_indicator <- grepl(pattern, cols)
+  dt[, cols[is_id | is_indicator], with = FALSE]
 }
 
 #' Filter wide SPI data.table columns by pillar
@@ -132,89 +133,4 @@ filter_rows_by_pillar_dimension <- function(dt, pillar, dimension) {
   }
 
   dt
-}
-# ---------------------------------------------------------------------------
-# Inventory path enrichment (used by spi-inventory-cache.R)
-# ---------------------------------------------------------------------------
-
-#' Enrich a raw file-tree data.table with pillar, dimension, and category
-#'
-#' Takes a raw `data.table` (from the GitHub tree crawler) with at minimum a
-#' `path` column and adds three metadata columns derived from each file path:
-#'
-#' - `category`: `"raw"` for files under `01_raw_data/`, `"output"` for
-#'   files under `03_output_data/`, and `"misc"` for everything else.
-#' - `pillar`: integer 1\u20135 extracted from the first subfolder name under
-#'   `01_raw_data/` (e.g. `4.1_SOCS` \u2192 `4L`). `NA` for all other paths.
-#' - `dimension`: character in `"P.D"` format from the same subfolder
-#'   (e.g. `4.1_SOCS` \u2192 `"4.1"`). `NA` when the subfolder encodes only a
-#'   pillar (e.g. `3_DP`) or the path falls outside `01_raw_data/`.
-#'
-#' The function is pure: it copies the input before enriching, so the
-#' original `data.table` is never modified.
-#'
-#' @param tree_dt A `data.table` with at minimum a character `path` column.
-#' @return A `data.table` with six columns: `path`, `type`, `size`,
-#'   `category`, `pillar`, `dimension`.
-#' @keywords internal
-.spi_enrich_tree <- function(tree_dt) {
-  if (!data.table::is.data.table(tree_dt))
-    cli::cli_abort("{.arg tree_dt} must be a {.cls data.table}, not {.cls {class(tree_dt)[1L]}}.")
-  if (!"path" %in% names(tree_dt))
-    cli::cli_abort("{.arg tree_dt} must contain a {.field path} column.")
-  if (!is.character(tree_dt[["path"]]))
-    cli::cli_abort("Column {.field path} must be character, not {.cls {class(tree_dt$path)[1L]}}.")
-
-  dt   <- data.table::copy(tree_dt)
-  path <- dt[["path"]]
-
-  na_paths <- sum(is.na(path))
-  if (na_paths > 0L)
-    cli::cli_warn("{na_paths} NA value{?s} in {.field path} treated as {.val misc}.")
-
-  # --- category ------------------------------------------------------------
-  # Derive from the top-level folder prefix.
-  category <- rep("misc", length(path))
-  category[startsWith(path, "01_raw_data/")]    <- "raw"
-  category[startsWith(path, "03_output_data/")] <- "output"
-  dt[, category := category]
-
-  # --- pillar and dimension (raw paths only) -------------------------------
-  # Extract the first subfolder immediately under 01_raw_data/, e.g.:
-  #   "01_raw_data/4.1_SOCS/file.csv"         -> subdir = "4.1_SOCS"
-  #   "01_raw_data/3_DP/2024/score.csv"        -> subdir = "3_DP"
-  #   "01_raw_data/metadata/codes.csv"         -> subdir = "metadata"
-  raw_idx <- which(category == "raw")
-  subdir  <- rep(NA_character_, length(path))
-
-  if (length(raw_idx) > 0L) {
-    # Strip the "01_raw_data/" prefix, then take text before the next "/".
-    after_prefix    <- substring(path[raw_idx], nchar("01_raw_data/") + 1L)
-    subdir[raw_idx] <- sub("/.*$", "", after_prefix)
-  }
-
-  # Compute pil_hits first; dim_hits is a strict subset (P.D folders also
-  # satisfy the leading-digit pattern), avoiding a redundant grep pass.
-  pil_hits <- grep("^[0-9]+", subdir)
-  dim_hits <- pil_hits[grepl("^[0-9]+\\.[0-9]+", subdir[pil_hits])]
-
-  dim_vec <- rep(NA_character_, length(path))
-  if (length(dim_hits) > 0L) {
-    dim_vec[dim_hits] <- regmatches(
-      subdir[dim_hits],
-      regexpr("^[0-9]+\\.[0-9]+", subdir[dim_hits])
-    )
-  }
-
-  pil_vec <- rep(NA_integer_, length(path))
-  if (length(pil_hits) > 0L) {
-    pil_vec[pil_hits] <- as.integer(regmatches(
-      subdir[pil_hits],
-      regexpr("^[0-9]+", subdir[pil_hits])
-    ))
-  }
-
-  dt[, c("pillar", "dimension") := list(pil_vec, dim_vec)]
-
-  return(dt)
 }

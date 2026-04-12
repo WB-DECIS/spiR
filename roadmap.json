@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "compound-gpid-roadmap-v1",
+  "milestones": [
+    {
+      "id": "output-data-access-mvp",
+      "title": "Output Data Access (MVP)",
+      "objective": "Users can retrieve, filter, and explore the three core SPI output datasets with version support.",
+      "status": "done",
+      "features": [
+        {
+          "id": "github-download-engine",
+          "title": "GitHub download engine",
+          "description": "Internal function to fetch CSV from raw GitHub URLs, with error handling, version (branch) support, default = master",
+          "status": "done",
+          "plan": null
+        },
+        {
+          "id": "spi-get-for-big-three",
+          "title": "spi_get() for big three",
+          "description": "Retrieve SPI_data.csv, SPI_index.csv, or aggregates as data.table; type argument selects which",
+          "status": "done",
+          "plan": null
+        },
+        {
+          "id": "filtering-in-spi-get",
+          "title": "Filtering in spi_get()",
+          "description": "country, year, pillar, dimension arguments to subset before returning",
+          "status": "done",
+          "plan": null
+        },
+        {
+          "id": "spi-versions",
+          "title": "spi_versions()",
+          "description": "Query GitHub API for available branches, return as character vector",
+          "status": "done",
+          "plan": null
+        },
+        {
+          "id": "package-infrastructure",
+          "title": "Package infrastructure",
+          "description": "DESCRIPTION, roxygen2, testthat setup, namespace, LICENSE; R CMD check passes clean",
+          "status": "done",
+          "plan": null
+        },
+        {
+          "id": "tests-for-milestone-1",
+          "title": "Tests for Milestone 1",
+          "description": "testthat coverage for spi_get(), filtering logic, error conditions, version handling",
+          "status": "done",
+          "plan": null
+        }
+      ]
+    },
+    {
+      "id": "inventory-raw-data",
+      "title": "Inventory & Raw Data",
+      "objective": "Users can interactively browse all available data (raw and output) and retrieve any raw data file.",
+      "status": "planned",
+      "features": [
+        {
+          "id": "github-tree-crawler",
+          "title": "GitHub tree crawler",
+          "description": "Internal function using GitHub API to list directory contents recursively; cached with configurable refresh",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "inventory-cache-system",
+          "title": "Inventory cache system",
+          "description": "Store crawled file tree locally in tools::R_user_dir(), with spi_update_inventory() to refresh",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "spi-inventory-interactive-mode",
+          "title": "spi_inventory() interactive mode",
+          "description": "Menu-driven: choose raw vs output, pillar (1-5) or misc/metadata, dimension, see files; works in interactive sessions",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "spi-inventory-programmatic-mode",
+          "title": "spi_inventory() programmatic mode",
+          "description": "Non-interactive: return data.table of all files filtered by pillar, dimension, category; for scripts",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "spi-get-raw",
+          "title": "spi_get_raw()",
+          "description": "Retrieve any raw data CSV/Excel file by path or inventory selection; version support; uses readxl for .xlsx files",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "tests-for-milestone-2",
+          "title": "Tests for Milestone 2",
+          "description": "Inventory display, cache refresh, raw data retrieval, edge cases",
+          "status": "idea",
+          "plan": null
+        }
+      ]
+    },
+    {
+      "id": "documentation-release",
+      "title": "Documentation & Release",
+      "objective": "Package is polished, documented, and ready for users.",
+      "status": "planned",
+      "features": [
+        {
+          "id": "readme-with-examples",
+          "title": "README with examples",
+          "description": "Setup, quick start, usage for each function",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "vignette-spi-data-workflows",
+          "title": "Vignette: SPI data workflows",
+          "description": "End-to-end examples: get data, filter, analyze, visualize",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "r-cmd-check-zero-warnings",
+          "title": "R CMD check zero warnings",
+          "description": "Final pass, clean all notes/warnings",
+          "status": "idea",
+          "plan": null
+        },
+        {
+          "id": "pkgdown-site-or-github-release",
+          "title": "pkgdown site or GitHub release",
+          "description": "Decide distribution channel",
+          "status": "idea",
+          "plan": null
+        }
+      ]
+    }
+  ]
+}

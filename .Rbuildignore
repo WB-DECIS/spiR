@@ -1,0 +1,7 @@
+^renv$
+^renv\.lock$
+^\.cg-docs$
+^\.github$
+^check_out\.txt$
+^check_err\.txt$
+^run_check\.R$

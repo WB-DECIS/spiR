@@ -130,6 +130,27 @@ describe(".spi_enrich_tree()", {
     expect_error(.spi_enrich_tree(data.table(x = 1L)), "path")
   })
 
+  it("errors clearly when path column is not character", {
+    expect_error(
+      .spi_enrich_tree(data.table(path = 1:3, type = "blob", size = 100L)),
+      "must be character"
+    )
+  })
+
+  it("errors clearly when type column is missing", {
+    expect_error(
+      .spi_enrich_tree(data.table(path = "x", size = 100L)),
+      "type"
+    )
+  })
+
+  it("errors clearly when size column is missing", {
+    expect_error(
+      .spi_enrich_tree(data.table(path = "x", type = "blob")),
+      "size"
+    )
+  })
+
   it("warns when path column contains NA values", {
     dt_na <- data.table(
       path = c("01_raw_data/4.1_SOCS/f.csv", NA_character_),
@@ -338,12 +359,74 @@ describe("cache read/write", {
     expect_null(result)
   })
 
-  it("warns on an empty tree from the crawler", {
+  it("warns and returns NULL when cached tree path column is not character", {
+    local_inventory_cache()
+    bad_tree <- .spi_enrich_tree(make_raw_tree())
+    bad_tree[, path := seq_len(.N)]  # replace character path with integers
+    bad_cache <- list(
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
+      timestamp      = Sys.time(),
+      tree           = bad_tree
+    )
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
+    expect_warning(
+      result <- .spi_inv_read_cache("master"),
+      "invalid.*path"
+    )
+    expect_null(result)
+  })
+
+  it("warns and returns NULL when cached tree size column is not numeric", {
+    local_inventory_cache()
+    bad_tree <- .spi_enrich_tree(make_raw_tree())
+    bad_tree[, size := as.character(size)]  # size should be numeric/integer
+    bad_cache <- list(
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
+      timestamp      = Sys.time(),
+      tree           = bad_tree
+    )
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
+    expect_warning(
+      result <- .spi_inv_read_cache("master"),
+      "invalid.*size"
+    )
+    expect_null(result)
+  })
+
+  it("warns and returns NULL when cached tree type column has invalid values", {
+    local_inventory_cache()
+    bad_tree <- .spi_enrich_tree(make_raw_tree())
+    bad_tree[1L, type := "not_a_valid_type"]
+    bad_cache <- list(
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
+      timestamp      = Sys.time(),
+      tree           = bad_tree
+    )
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
+    expect_warning(
+      result <- .spi_inv_read_cache("master"),
+      "unexpected.*type"
+    )
+    expect_null(result)
+  })
+
+  it("errors when tree_dt is not a data.table", {
+    local_inventory_cache()
+    expect_error(
+      .spi_inv_write_cache(
+        data.frame(path = "x", type = "blob", size = 100L),
+        "master"
+      ),
+      "data.table"
+    )
+  })
+
+  it("errors on an empty tree from the crawler", {
     local_inventory_cache()
     empty_tree <- data.table(
       path = character(), type = character(), size = integer()
     )
-    expect_warning(
+    expect_error(
       .spi_inv_write_cache(empty_tree, "master"),
       "empty tree"
     )
@@ -481,6 +564,31 @@ describe("spi_clear_inventory()", {
 
   it("rejects a non-character version argument", {
     expect_error(spi_clear_inventory(version = 123), "`version`")
+  })
+
+  it("informs when a specific version cache is cleared", {
+    local_inventory_cache()
+    local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
+    spi_update_inventory("master")
+    expect_message(spi_clear_inventory("master"), "cleared for version")
+  })
+
+  it("informs when no cache exists for the requested version", {
+    local_inventory_cache()
+    expect_message(spi_clear_inventory("nonexistent"), "No inventory cache found for version")
+  })
+
+  it("informs with file count when wiping all cache files", {
+    local_inventory_cache()
+    local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
+    spi_update_inventory("master")
+    spi_update_inventory("SPI2023")
+    expect_message(spi_clear_inventory(), "file")
+  })
+
+  it("informs when the cache is already empty (clear all)", {
+    local_inventory_cache()
+    expect_message(spi_clear_inventory(), "already empty")
   })
 
   it("only deletes the specified version, leaving others intact", {

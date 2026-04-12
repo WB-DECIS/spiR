@@ -49,6 +49,9 @@
 #' Each branch corresponds to a version of the SPI data that can be passed
 #' as the `version` argument to [spi_get()].
 #'
+#' If the repository has more than 100 branches, the list may be incomplete
+#' due to GitHub API pagination limits; a warning is issued in this case.
+#'
 #' @return A sorted character vector of branch names. `"master"` (the
 #'   latest stable version) is always included.
 #'
@@ -97,8 +100,11 @@ spi_versions <- function() {
 #' @return A `data.table` with columns `path`, `type`, `size`.
 #' @keywords internal
 .spi_crawl_tree <- function(version = "master") {
-  cli::cli_abort(c(
-    "The GitHub tree crawler is not yet implemented.",
-    "i" = "This feature is planned for the {.code github-tree-crawler} milestone."
-  ))
+  cli::cli_abort(
+    c(
+      "The GitHub tree crawler is not yet implemented.",
+      "i" = "This feature is planned for the {.code github-tree-crawler} milestone."
+    ),
+    class = "spi_not_implemented"
+  )
 }

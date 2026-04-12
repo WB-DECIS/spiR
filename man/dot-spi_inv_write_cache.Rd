@@ -15,8 +15,9 @@
 The enriched \code{data.table}, invisibly.
 }
 \description{
-Enriches \code{tree_dt} (via \code{\link[=.spi_enrich_tree]{.spi_enrich_tree()}}), then saves a named list
-with \code{schema_version}, \code{timestamp}, and \code{tree} as an RDS file keyed by
-the branch name.
+Validates that \code{tree_dt} is a non-empty \code{data.table} (delegating detailed
+column checks to \code{\link[=.spi_enrich_tree]{.spi_enrich_tree()}}), enriches it, then saves a named
+list with \code{schema_version}, \code{timestamp}, and \code{tree} as an RDS file keyed
+by the branch name.
 }
 \keyword{internal}

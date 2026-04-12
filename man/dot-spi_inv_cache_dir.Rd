@@ -10,6 +10,10 @@
 Character scalar: absolute path to the cache directory.
 }
 \description{
-Resolve (and create if necessary) the spiR inventory cache directory
+Thin wrapper around \code{\link[tools:userdir]{tools::R_user_dir()}} so tests can redirect the cache
+to a temporary directory via
+\code{local_mocked_bindings(.spi_inv_cache_dir = function() tmp)}.
+The resolved location is platform-dependent
+(e.g. \verb{~/.cache/spiR} on Unix, \verb{\%LOCALAPPDATA\%/spiR} on Windows).
 }
 \keyword{internal}

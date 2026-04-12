@@ -13,16 +13,27 @@
 A \code{data.table} (the cached tree), or \code{NULL}.
 }
 \description{
-Returns \code{NULL} (so the caller knows to re-crawl) in five situations:
+Returns \code{NULL} (so the caller knows to re-crawl) in these situations:
 \itemize{
-\item File does not exist.
+\item File does not exist (silent).
 \item File cannot be read (corrupt). A warning is emitted and the file
 is deleted.
 \item File has an unexpected list structure. A warning is emitted and
 the file is deleted.
 \item File has an incompatible \code{schema_version}. A warning is emitted
 and the file is deleted.
-\item File is older than 30 days (silent expiry).
+\item Timestamp is not a valid \code{POSIXct} (e.g. tampered RDS). A warning
+is emitted and the file is deleted.
+\item File is older than 30 days, or the timestamp is in the future
+(clock skew). Silent expiry -- caller will re-crawl.
+\item Tree is not a \code{data.table} or is missing expected columns.
+A warning is emitted and the file is deleted.
+\item Tree \code{size} column is not numeric or integer. A warning is emitted
+and the file is deleted.
+\item Tree \code{path} column is not character. A warning is emitted and the
+file is deleted.
+\item Tree \code{type} column contains values other than \code{"blob"} or
+\code{"tree"}. A warning is emitted and the file is deleted.
 }
 }
 \keyword{internal}
