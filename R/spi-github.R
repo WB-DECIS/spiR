@@ -82,3 +82,23 @@ spi_versions <- function() {
   # Guarantee that "master" is always in the result per the documented contract.
   sort(union(branch_names, "master"))
 }
+
+# ---------------------------------------------------------------------------
+# Tree crawler (github-tree-crawler feature stub)
+# ---------------------------------------------------------------------------
+
+#' Internal: crawl the SPI GitHub repository file tree
+#'
+#' Placeholder for the `github-tree-crawler` feature. When that feature is
+#' implemented, this function will call the GitHub Trees API and return the
+#' full recursive file tree as a `data.table`.
+#'
+#' @param version Character. Branch name.
+#' @return A `data.table` with columns `path`, `type`, `size`.
+#' @keywords internal
+.spi_crawl_tree <- function(version = "master") {
+  cli::cli_abort(c(
+    "The GitHub tree crawler is not yet implemented.",
+    "i" = "This feature is planned for the {.code github-tree-crawler} milestone."
+  ))
+}

@@ -15,7 +15,7 @@ library(data.table)
 # The temp dir is cleaned up and the mock is reverted when the test ends.
 local_inventory_cache <- function(env = parent.frame()) {
   tmp <- withr::local_tempdir(.local_envir = env)
-  local_mocked_bindings(.spi_cache_dir = function() tmp, .env = env)
+  local_mocked_bindings(.spi_inv_cache_dir = function() tmp, .env = env)
   invisible(tmp)
 }
 
@@ -51,10 +51,10 @@ describe(".spi_enrich_tree()", {
     result <- .spi_enrich_tree(make_raw_tree())
     expect_s3_class(result, "data.table")
     expect_equal(ncol(result), 6L)
-    expect_true(all(
-      c("path", "type", "size", "category", "pillar", "dimension") %in%
-        names(result)
-    ))
+    expect_setequal(
+      names(result),
+      c("path", "type", "size", "category", "pillar", "dimension")
+    )
   })
 
   it("assigns 'raw' category to 01_raw_data/ paths", {
@@ -121,54 +121,140 @@ describe(".spi_enrich_tree()", {
     expect_true(is.na(result[["pillar"]]))
     expect_true(is.na(result[["dimension"]]))
   })
+
+  it("errors clearly when tree_dt is not a data.table", {
+    expect_error(.spi_enrich_tree(data.frame(path = "x")), "data.table")
+  })
+
+  it("errors clearly when path column is missing", {
+    expect_error(.spi_enrich_tree(data.table(x = 1L)), "path")
+  })
+
+  it("warns when path column contains NA values", {
+    dt_na <- data.table(
+      path = c("01_raw_data/4.1_SOCS/f.csv", NA_character_),
+      type = "blob",
+      size = 100L
+    )
+    expect_warning(.spi_enrich_tree(dt_na), "NA")
+  })
+
+  it("handles multi-digit pillar-like folder names (e.g. 10_NewPillar)", {
+    edge <- data.table(
+      path = "01_raw_data/10_NewPillar/file.csv",
+      type = "blob",
+      size = 100L
+    )
+    result <- .spi_enrich_tree(edge)
+    expect_equal(result[["pillar"]], 10L)
+  })
 })
 
 # ---------------------------------------------------------------------------
-# 2. Cache read / write infrastructure
+# 2. Cache directory / path helpers (P1.1, P2.1, P2.2)
+# ---------------------------------------------------------------------------
+
+describe(".spi_inv_cache_dir() and .spi_inv_cache_path()", {
+  it(".spi_inv_cache_path() returns a path ending in tree_master.rds", {
+    local_inventory_cache()
+    path <- .spi_inv_cache_path("master")
+    expect_type(path, "character")
+    expect_match(path, "tree_master\\.rds$")
+  })
+
+  it(".spi_inv_cache_path() produces different paths for different versions", {
+    local_inventory_cache()
+    p1 <- .spi_inv_cache_path("master")
+    p2 <- .spi_inv_cache_path("SPI2023")
+    expect_false(identical(p1, p2))
+    expect_match(p2, "tree_SPI2023\\.rds$")
+  })
+
+  it(".spi_inv_cache_path() rejects version strings containing /", {
+    local_inventory_cache()
+    expect_error(.spi_inv_cache_path("evil/branch"), "path separators")
+  })
+
+  it(".spi_inv_cache_path() rejects version strings containing ../ (path traversal)", {
+    local_inventory_cache()
+    expect_error(.spi_inv_cache_path("../evil"), "path separators")
+  })
+
+  it(".spi_inv_cache_dir() returns a character path that exists", {
+    local_inventory_cache()
+    path <- .spi_inv_cache_dir()
+    expect_type(path, "character")
+    expect_true(dir.exists(path))
+  })
+})
+
+# ---------------------------------------------------------------------------
+# 3. Cache read / write infrastructure
 # ---------------------------------------------------------------------------
 
 describe("cache read/write", {
   it("round-trip: write then read returns same row count", {
     local_inventory_cache()
-    .spi_write_cache(make_raw_tree(), "master")
-    result <- .spi_read_cache("master")
+    .spi_inv_write_cache(make_raw_tree(), "master")
+    result <- .spi_inv_read_cache("master")
     expect_s3_class(result, "data.table")
     expect_equal(nrow(result), nrow(make_raw_tree()))
   })
 
   it("round-trip result has all 6 expected columns", {
     local_inventory_cache()
-    .spi_write_cache(make_raw_tree(), "master")
-    result <- .spi_read_cache("master")
-    expect_true(all(
-      c("path", "type", "size", "category", "pillar", "dimension") %in%
-        names(result)
-    ))
+    .spi_inv_write_cache(make_raw_tree(), "master")
+    result <- .spi_inv_read_cache("master")
+    expect_setequal(
+      names(result),
+      c("path", "type", "size", "category", "pillar", "dimension")
+    )
+  })
+
+  it("round-trip preserves all data values exactly", {
+    local_inventory_cache()
+    original <- .spi_enrich_tree(make_raw_tree())
+    .spi_inv_write_cache(make_raw_tree(), "master")
+    result <- .spi_inv_read_cache("master")
+    expect_equal(result$path,      original$path)
+    expect_equal(result$type,      original$type)
+    expect_equal(result$size,      original$size)
+    expect_equal(result$category,  original$category)
+    expect_equal(result$pillar,    original$pillar)
+    expect_equal(result$dimension, original$dimension)
+  })
+
+  it(".spi_inv_write_cache() returns the enriched 6-column data.table invisibly", {
+    local_inventory_cache()
+    result <- .spi_inv_write_cache(make_raw_tree(), "master")
+    expect_s3_class(result, "data.table")
+    expect_equal(ncol(result), 6L)
+    expect_true("category" %in% names(result))
   })
 
   it("returns NULL for a non-existent cache file (no warning)", {
     local_inventory_cache()
-    expect_no_warning(result <- .spi_read_cache("nonexistent-branch"))
+    expect_no_warning(result <- .spi_inv_read_cache("nonexistent-branch"))
     expect_null(result)
   })
 
   it("returns NULL silently for an expired cache (>30 days)", {
     local_inventory_cache()
     old_cache <- list(
-      schema_version = INVENTORY_CACHE_SCHEMA_VERSION,
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
       timestamp      = Sys.time() - (31L * 86400L),
       tree           = .spi_enrich_tree(make_raw_tree())
     )
-    saveRDS(old_cache, file = .spi_cache_path("master"))
-    expect_no_warning(result <- .spi_read_cache("master"))
+    saveRDS(old_cache, file = .spi_inv_cache_path("master"))
+    expect_no_warning(result <- .spi_inv_read_cache("master"))
     expect_null(result)
   })
 
   it("warns and returns NULL for a corrupted cache file", {
     local_inventory_cache()
-    writeLines("THIS IS NOT VALID RDS", .spi_cache_path("master"))
+    writeLines("THIS IS NOT VALID RDS", .spi_inv_cache_path("master"))
     expect_warning(
-      result <- .spi_read_cache("master"),
+      result <- .spi_inv_read_cache("master"),
       "corrupted"
     )
     expect_null(result)
@@ -176,9 +262,9 @@ describe("cache read/write", {
 
   it("deletes the corrupted file after warning", {
     local_inventory_cache()
-    path <- .spi_cache_path("master")
+    path <- .spi_inv_cache_path("master")
     writeLines("THIS IS NOT VALID RDS", path)
-    suppressWarnings(.spi_read_cache("master"))
+    suppressWarnings(.spi_inv_read_cache("master"))
     expect_false(file.exists(path))
   })
 
@@ -189,9 +275,9 @@ describe("cache read/write", {
       timestamp      = Sys.time(),
       tree           = .spi_enrich_tree(make_raw_tree())
     )
-    saveRDS(bad_cache, file = .spi_cache_path("master"))
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
     expect_warning(
-      result <- .spi_read_cache("master"),
+      result <- .spi_inv_read_cache("master"),
       "incompatible schema"
     )
     expect_null(result)
@@ -199,44 +285,86 @@ describe("cache read/write", {
 
   it("deletes the incompatible-schema file after warning", {
     local_inventory_cache()
-    path <- .spi_cache_path("master")
+    path <- .spi_inv_cache_path("master")
     bad_cache <- list(
       schema_version = 99L,
       timestamp      = Sys.time(),
       tree           = .spi_enrich_tree(make_raw_tree())
     )
     saveRDS(bad_cache, path)
-    suppressWarnings(.spi_read_cache("master"))
+    suppressWarnings(.spi_inv_read_cache("master"))
     expect_false(file.exists(path))
   })
 
   it("warns and returns NULL for a cache with missing required fields", {
     local_inventory_cache()
-    bad_cache <- list(schema_version = INVENTORY_CACHE_SCHEMA_VERSION)
-    saveRDS(bad_cache, file = .spi_cache_path("master"))
+    bad_cache <- list(schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION)
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
     expect_warning(
-      result <- .spi_read_cache("master"),
+      result <- .spi_inv_read_cache("master"),
       "unexpected structure"
     )
     expect_null(result)
   })
 
+  it("warns and returns NULL for a cache with a non-POSIXct timestamp", {
+    local_inventory_cache()
+    bad_cache <- list(
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
+      timestamp      = "not-a-date",
+      tree           = .spi_enrich_tree(make_raw_tree())
+    )
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
+    expect_warning(
+      result <- .spi_inv_read_cache("master"),
+      "invalid timestamp"
+    )
+    expect_null(result)
+  })
+
+  it("warns and returns NULL when cached tree has wrong columns", {
+    local_inventory_cache()
+    bad_tree <- data.table(path = "x", type = "blob")
+    bad_cache <- list(
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
+      timestamp      = Sys.time(),
+      tree           = bad_tree
+    )
+    saveRDS(bad_cache, file = .spi_inv_cache_path("master"))
+    expect_warning(
+      result <- .spi_inv_read_cache("master"),
+      "unexpected tree schema"
+    )
+    expect_null(result)
+  })
+
+  it("warns on an empty tree from the crawler", {
+    local_inventory_cache()
+    empty_tree <- data.table(
+      path = character(), type = character(), size = integer()
+    )
+    expect_warning(
+      .spi_inv_write_cache(empty_tree, "master"),
+      "empty tree"
+    )
+  })
+
   it("caches different versions independently", {
     local_inventory_cache()
-    .spi_write_cache(make_raw_tree(), "master")
-    expect_null(.spi_read_cache("SPI2023"))
-    expect_s3_class(.spi_read_cache("master"), "data.table")
+    .spi_inv_write_cache(make_raw_tree(), "master")
+    expect_null(.spi_inv_read_cache("SPI2023"))
+    expect_s3_class(.spi_inv_read_cache("master"), "data.table")
   })
 })
 
 # ---------------------------------------------------------------------------
-# 3. Inventory resolver (.spi_get_inventory)
+# 4. Inventory resolver (.spi_get_inventory)
 # ---------------------------------------------------------------------------
 
 describe(".spi_get_inventory()", {
   it("returns the cached tree on a cache hit without calling the crawler", {
     local_inventory_cache()
-    .spi_write_cache(make_raw_tree(), "master")
+    .spi_inv_write_cache(make_raw_tree(), "master")
     # The fail mock should never be called if the cache is valid
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_fail)
     expect_s3_class(.spi_get_inventory("master"), "data.table")
@@ -251,17 +379,17 @@ describe(".spi_get_inventory()", {
     result <- .spi_get_inventory("master")
     expect_true(crawled)
     expect_s3_class(result, "data.table")
-    expect_true(file.exists(.spi_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
   })
 
   it("re-crawls and overwrites an expired cache", {
     local_inventory_cache()
     old_cache <- list(
-      schema_version = INVENTORY_CACHE_SCHEMA_VERSION,
+      schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
       timestamp      = Sys.time() - (31L * 86400L),
       tree           = .spi_enrich_tree(make_raw_tree())
     )
-    saveRDS(old_cache, file = .spi_cache_path("master"))
+    saveRDS(old_cache, file = .spi_inv_cache_path("master"))
     crawled <- FALSE
     local_mocked_bindings(
       .spi_crawl_tree = function(v) { crawled <<- TRUE; make_raw_tree() }
@@ -278,10 +406,18 @@ describe(".spi_get_inventory()", {
       "No cached inventory found"
     )
   })
+
+  it("rejects a non-character version", {
+    expect_error(.spi_get_inventory(123), "`version`")
+  })
+
+  it("rejects an empty-string version", {
+    expect_error(.spi_get_inventory(""), "`version`")
+  })
 })
 
 # ---------------------------------------------------------------------------
-# 4. Exported functions
+# 5. Exported functions
 # ---------------------------------------------------------------------------
 
 describe("spi_update_inventory()", {
@@ -290,7 +426,7 @@ describe("spi_update_inventory()", {
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
     result <- spi_update_inventory("master")
     expect_s3_class(result, "data.table")
-    expect_true(file.exists(.spi_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
   })
 
   it("informs the user after a successful update", {
@@ -317,7 +453,7 @@ describe("spi_clear_inventory()", {
     local_inventory_cache()
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
     spi_update_inventory("master")
-    path <- .spi_cache_path("master")
+    path <- .spi_inv_cache_path("master")
     expect_true(file.exists(path))
     spi_clear_inventory("master")
     expect_false(file.exists(path))
@@ -329,7 +465,7 @@ describe("spi_clear_inventory()", {
     spi_update_inventory("master")
     spi_update_inventory("SPI2023")
     spi_clear_inventory()
-    remaining <- list.files(.spi_cache_dir(), pattern = "^tree_.*\\.rds$")
+    remaining <- list.files(.spi_inv_cache_dir(), pattern = "^tree_.*\\.rds$")
     expect_equal(length(remaining), 0L)
   })
 
@@ -353,13 +489,13 @@ describe("spi_clear_inventory()", {
     spi_update_inventory("master")
     spi_update_inventory("SPI2023")
     spi_clear_inventory("master")
-    expect_false(file.exists(.spi_cache_path("master")))
-    expect_true(file.exists(.spi_cache_path("SPI2023")))
+    expect_false(file.exists(.spi_inv_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("SPI2023")))
   })
 })
 
 # ---------------------------------------------------------------------------
-# 5. Lifecycle: full workflow integration
+# 6. Lifecycle: full workflow integration
 # ---------------------------------------------------------------------------
 
 describe("Lifecycle: full cache workflow", {
@@ -370,7 +506,7 @@ describe("Lifecycle: full cache workflow", {
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
     r1 <- .spi_get_inventory("master")
     expect_s3_class(r1, "data.table")
-    expect_true(file.exists(.spi_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
 
     # Step 2: cache hit → no crawl (fail mock must NOT be triggered)
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_fail)
@@ -379,11 +515,11 @@ describe("Lifecycle: full cache workflow", {
     # Step 3: force update (success mock)
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_success)
     expect_no_error(spi_update_inventory("master"))
-    expect_true(file.exists(.spi_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
 
     # Step 4: clear
     spi_clear_inventory("master")
-    expect_false(file.exists(.spi_cache_path("master")))
+    expect_false(file.exists(.spi_inv_cache_path("master")))
 
     # Step 5: no cache + no network → informative error
     local_mocked_bindings(.spi_crawl_tree = mock_crawl_fail)
@@ -397,14 +533,14 @@ describe("Lifecycle: full cache workflow", {
     .spi_get_inventory("master")
     .spi_get_inventory("SPI2023")
 
-    expect_true(file.exists(.spi_cache_path("master")))
-    expect_true(file.exists(.spi_cache_path("SPI2023")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
+    expect_true(file.exists(.spi_inv_cache_path("SPI2023")))
 
     spi_clear_inventory("SPI2023")
-    expect_true(file.exists(.spi_cache_path("master")))
-    expect_false(file.exists(.spi_cache_path("SPI2023")))
+    expect_true(file.exists(.spi_inv_cache_path("master")))
+    expect_false(file.exists(.spi_inv_cache_path("SPI2023")))
 
     spi_clear_inventory()
-    expect_false(file.exists(.spi_cache_path("master")))
+    expect_false(file.exists(.spi_inv_cache_path("master")))
   })
 })

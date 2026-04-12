@@ -3,117 +3,24 @@
 # Stores crawled GitHub file trees on disk (one RDS per version/branch)
 # to avoid redundant GitHub API calls on every spi_inventory() call.
 #
-# Public API  : spi_update_inventory(), spi_clear_inventory()
-# Internal    : .spi_enrich_tree(), .spi_cache_dir(), .spi_cache_path(),
-#               .spi_write_cache(), .spi_read_cache(), .spi_get_inventory()
-# Stub (TBR)  : .spi_crawl_tree() — replaced by the github-tree-crawler feature
+# Public API   : spi_update_inventory(), spi_clear_inventory()
+# Internal     : .spi_inv_cache_dir(), .spi_inv_cache_path(),
+#                .spi_inv_write_cache(), .spi_inv_read_cache(),
+#                .spi_get_inventory()
+# Path enrich  : .spi_enrich_tree()  — lives in spi-filters.R
+# Tree crawler : .spi_crawl_tree()   — lives in spi-github.R
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-INVENTORY_CACHE_SCHEMA_VERSION <- 1L
-INVENTORY_CACHE_TTL_DAYS       <- 30L
+# Increment when the cache list structure changes (forces re-crawl on load).
+SPI_INVENTORY_CACHE_SCHEMA_VERSION <- 1L
+# Age threshold (days) after which a cached tree expires and triggers a re-crawl.
+SPI_INVENTORY_CACHE_TTL_DAYS       <- 30L
 
 # ---------------------------------------------------------------------------
-# Stub: tree crawler (will be replaced by github-tree-crawler feature)
-# ---------------------------------------------------------------------------
-
-#' Internal stub: crawl the SPI GitHub repository file tree
-#'
-#' Placeholder for the `github-tree-crawler` feature. When that feature is
-#' implemented this function will be replaced by one that calls the GitHub
-#' Trees API and returns the full recursive file tree as a `data.table`.
-#'
-#' @param version Character. Branch name.
-#' @return A `data.table` with columns `path`, `type`, `size`.
-#' @keywords internal
-.spi_crawl_tree <- function(version = "master") {
-  cli::cli_abort(c(
-    "The GitHub tree crawler is not yet implemented.",
-    "i" = "This feature is planned for the {.code github-tree-crawler} milestone."
-  ))
-}
-
-# ---------------------------------------------------------------------------
-# Step 1: Path-enrichment logic (R4, R11-R14)
-# ---------------------------------------------------------------------------
-
-#' Enrich a raw file-tree data.table with pillar, dimension, and category
-#'
-#' Takes a raw `data.table` (from the GitHub tree crawler) with at minimum a
-#' `path` column and adds three metadata columns derived from each file path:
-#'
-#' - `category`: `"raw"` for files under `01_raw_data/`, `"output"` for
-#'   files under `03_output_data/`, and `"misc"` for everything else.
-#' - `pillar`: integer 1–5 extracted from the first subfolder name under
-#'   `01_raw_data/` (e.g. `4.1_SOCS` → `4L`). `NA` for all other paths.
-#' - `dimension`: character in `"P.D"` format from the same subfolder
-#'   (e.g. `4.1_SOCS` → `"4.1"`). `NA` when the subfolder encodes only a
-#'   pillar (e.g. `3_DP`) or the path falls outside `01_raw_data/`.
-#'
-#' The function is pure: it copies the input and adds columns without
-#' modifying the original `data.table`.
-#'
-#' @param tree_dt A `data.table` with at minimum a character `path` column.
-#' @return A `data.table` with six columns: `path`, `type`, `size`,
-#'   `category`, `pillar`, `dimension`.
-#' @keywords internal
-.spi_enrich_tree <- function(tree_dt) {
-  dt   <- data.table::copy(tree_dt)
-  path <- dt[["path"]]
-
-  # --- category ------------------------------------------------------------
-  # Derive from the top-level folder prefix.
-  category <- rep("misc", length(path))
-  category[startsWith(path, "01_raw_data/")]    <- "raw"
-  category[startsWith(path, "03_output_data/")] <- "output"
-  dt[, category := category]
-
-  # --- pillar and dimension (raw paths only) -------------------------------
-  # Extract the first subfolder immediately under 01_raw_data/, e.g.:
-  #   "01_raw_data/4.1_SOCS/file.csv"         -> subdir = "4.1_SOCS"
-  #   "01_raw_data/3_DP/2024/score.csv"        -> subdir = "3_DP"
-  #   "01_raw_data/metadata/codes.csv"         -> subdir = "metadata"
-  raw_idx <- which(category == "raw")
-  subdir  <- rep(NA_character_, length(path))
-
-  if (length(raw_idx) > 0L) {
-    # Strip the "01_raw_data/" prefix (12 characters), then take text before
-    # the next "/" to isolate the immediate subfolder name.
-    after_prefix    <- substring(path[raw_idx], nchar("01_raw_data/") + 1L)
-    subdir[raw_idx] <- sub("/.*$", "", after_prefix)
-  }
-
-  # dimension: match "P.D" (digits.digits) at the start of the subfolder
-  dim_vec  <- rep(NA_character_, length(path))
-  dim_hits <- grep("^[0-9]+\\.[0-9]+", subdir)
-  if (length(dim_hits) > 0L) {
-    dim_vec[dim_hits] <- regmatches(
-      subdir[dim_hits],
-      regexpr("^[0-9]+\\.[0-9]+", subdir[dim_hits])
-    )
-  }
-
-  # pillar: leading integer from the subfolder name (works for both "P.D_"
-  # and "P_" style folder names)
-  pil_vec  <- rep(NA_integer_, length(path))
-  pil_hits <- grep("^[0-9]+", subdir)
-  if (length(pil_hits) > 0L) {
-    pil_vec[pil_hits] <- as.integer(regmatches(
-      subdir[pil_hits],
-      regexpr("^[0-9]+", subdir[pil_hits])
-    ))
-  }
-
-  dt[, pillar    := pil_vec]
-  dt[, dimension := dim_vec]
-
-  return(dt)
-}
-
-# ---------------------------------------------------------------------------
-# Step 2: Cache directory helpers (R1, R2)
+# Step 1: Cache directory helpers (R1, R2)
 # ---------------------------------------------------------------------------
 
 #' Resolve (and create if necessary) the spiR inventory cache directory
@@ -121,7 +28,7 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
 #' @importFrom tools R_user_dir
 #' @return Character scalar: absolute path to the cache directory.
 #' @keywords internal
-.spi_cache_dir <- function() {
+.spi_inv_cache_dir <- function() {
   dir <- tools::R_user_dir("spiR", "cache")
   if (!dir.exists(dir)) dir.create(dir, recursive = TRUE)
   return(dir)
@@ -133,8 +40,15 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
 #' @return Character scalar: path to `tree_{version}.rds` inside the cache
 #'   directory.
 #' @keywords internal
-.spi_cache_path <- function(version) {
-  file.path(.spi_cache_dir(), paste0("tree_", version, ".rds"))
+.spi_inv_cache_path <- function(version) {
+  # Guard against path traversal: version must not contain path separators.
+  if (grepl("[/\\\\]", version)) {
+    cli::cli_abort(c(
+      "{.arg version} must not contain path separators.",
+      "x" = "Got: {.val {version}}"
+    ))
+  }
+  file.path(.spi_inv_cache_dir(), paste0("tree_", version, ".rds"))
 }
 
 # ---------------------------------------------------------------------------
@@ -151,34 +65,42 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
 #' @param version Character. Branch name (determines the cache file name).
 #' @return The enriched `data.table`, invisibly.
 #' @keywords internal
-.spi_write_cache <- function(tree_dt, version) {
+.spi_inv_write_cache <- function(tree_dt, version) {
+  if (nrow(tree_dt) == 0L) {
+    cli::cli_warn(
+      "Crawler returned an empty tree for {.val {version}}; caching anyway."
+    )
+  }
   enriched  <- .spi_enrich_tree(tree_dt)
   cache_obj <- list(
-    schema_version = INVENTORY_CACHE_SCHEMA_VERSION,
+    schema_version = SPI_INVENTORY_CACHE_SCHEMA_VERSION,
     timestamp      = Sys.time(),
     tree           = enriched
   )
-  saveRDS(cache_obj, file = .spi_cache_path(version))
+  # compress = FALSE gives faster cold reads; file size is negligible at this scale.
+  saveRDS(cache_obj, file = .spi_inv_cache_path(version), compress = FALSE)
   invisible(enriched)
 }
 
 #' Read and validate the on-disk inventory cache for a version
 #'
-#' Returns `NULL` (so the caller knows to re-crawl) in four situations:
+#' Returns `NULL` (so the caller knows to re-crawl) in five situations:
 #' \itemize{
 #'   \item File does not exist.
-#'   \item File is older than 30 days (silent expiry).
 #'   \item File cannot be read (corrupt). A warning is emitted and the file
 #'     is deleted.
+#'   \item File has an unexpected list structure. A warning is emitted and
+#'     the file is deleted.
 #'   \item File has an incompatible `schema_version`. A warning is emitted
 #'     and the file is deleted.
+#'   \item File is older than 30 days (silent expiry).
 #' }
 #'
 #' @param version Character. Branch name.
 #' @return A `data.table` (the cached tree), or `NULL`.
 #' @keywords internal
-.spi_read_cache <- function(version) {
-  path <- .spi_cache_path(version)
+.spi_inv_read_cache <- function(version) {
+  path <- .spi_inv_cache_path(version)
 
   if (!file.exists(path)) return(NULL)
 
@@ -209,10 +131,20 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
   }
 
   # --- Check schema version -----------------------------------------------
-  if (!identical(cache_obj[["schema_version"]], INVENTORY_CACHE_SCHEMA_VERSION)) {
+  if (!identical(cache_obj[["schema_version"]], SPI_INVENTORY_CACHE_SCHEMA_VERSION)) {
     cli::cli_warn(c(
       "Cached inventory for version {.val {version}} uses an incompatible schema (v{cache_obj$schema_version}) and will be deleted.",
-      "i" = "Expected schema v{INVENTORY_CACHE_SCHEMA_VERSION}. It will be re-fetched on the next call."
+      "i" = "Expected schema v{SPI_INVENTORY_CACHE_SCHEMA_VERSION}. It will be re-fetched on the next call."
+    ))
+    unlink(path)
+    return(NULL)
+  }
+
+  # --- Validate timestamp type (guards against manual RDS edits) ----------
+  if (!inherits(cache_obj[["timestamp"]], "POSIXct")) {
+    cli::cli_warn(c(
+      "Cached inventory for version {.val {version}} has an invalid timestamp and will be deleted.",
+      "i" = "It will be re-fetched on the next call."
     ))
     unlink(path)
     return(NULL)
@@ -222,11 +154,23 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
   age_days <- as.numeric(
     difftime(Sys.time(), cache_obj[["timestamp"]], units = "days")
   )
-  if (age_days > INVENTORY_CACHE_TTL_DAYS) {
+  if (age_days > SPI_INVENTORY_CACHE_TTL_DAYS) {
     return(NULL)  # Silent expiry — caller will re-crawl
   }
 
-  return(cache_obj[["tree"]])
+  # --- Validate tree schema -----------------------------------------------
+  tree          <- cache_obj[["tree"]]
+  expected_cols <- c("path", "type", "size", "category", "pillar", "dimension")
+  if (!data.table::is.data.table(tree) || !all(expected_cols %in% names(tree))) {
+    cli::cli_warn(c(
+      "Cached inventory for version {.val {version}} has an unexpected tree schema and will be deleted.",
+      "i" = "It will be re-fetched on the next call."
+    ))
+    unlink(path)
+    return(NULL)
+  }
+
+  return(tree)
 }
 
 # ---------------------------------------------------------------------------
@@ -247,7 +191,14 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
 #'   `pillar`, `dimension`.
 #' @keywords internal
 .spi_get_inventory <- function(version = "master") {
-  cached <- .spi_read_cache(version)
+  if (!is.character(version) || length(version) != 1L || !nzchar(version)) {
+    cli::cli_abort(c(
+      "{.arg version} must be a single non-empty character string.",
+      "x" = "You supplied a {.cls {class(version)[1L]}}."
+    ))
+  }
+
+  cached <- .spi_inv_read_cache(version)
   if (!is.null(cached)) return(cached)
 
   # Cache miss / expired — try to crawl the repository
@@ -262,7 +213,8 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
     }
   )
 
-  .spi_write_cache(tree_dt, version)
+  result <- .spi_inv_write_cache(tree_dt, version)
+  invisible(result)
 }
 
 # ---------------------------------------------------------------------------
@@ -293,6 +245,7 @@ INVENTORY_CACHE_TTL_DAYS       <- 30L
 #'     \item{`dimension`}{Character `"P.D"` (e.g. `"4.1"`), or `NA`.}
 #'   }
 #'
+#' @family spi-inventory-cache
 #' @seealso [spi_clear_inventory()], [spi_versions()]
 #'
 #' @examples
@@ -315,7 +268,7 @@ spi_update_inventory <- function(version = "master") {
   }
 
   tree_dt <- .spi_crawl_tree(version)
-  result  <- .spi_write_cache(tree_dt, version)
+  result  <- .spi_inv_write_cache(tree_dt, version)
   cli::cli_inform("Inventory updated for version {.val {version}}.")
   invisible(result)
 }
@@ -332,6 +285,7 @@ spi_update_inventory <- function(version = "master") {
 #'
 #' @return `NULL`, invisibly.
 #'
+#' @family spi-inventory-cache
 #' @seealso [spi_update_inventory()], [spi_clear_cache()]
 #'
 #' @examples
@@ -352,7 +306,7 @@ spi_clear_inventory <- function(version = NULL) {
         "x" = "You supplied a {.cls {class(version)[1L]}} of length {length(version)}."
       ))
     }
-    path <- .spi_cache_path(version)
+    path <- .spi_inv_cache_path(version)
     if (file.exists(path)) {
       unlink(path)
       cli::cli_inform("Inventory cache cleared for version {.val {version}}.")
@@ -360,7 +314,10 @@ spi_clear_inventory <- function(version = NULL) {
       cli::cli_inform("No inventory cache found for version {.val {version}}.")
     }
   } else {
-    cache_dir <- .spi_cache_dir()
+    # Use .spi_inv_cache_dir() so that tests can mock the cache location.
+    # list.files() returns character(0) on a fresh directory, so no special
+    # "dir doesn't exist" guard is needed.
+    cache_dir <- .spi_inv_cache_dir()
     files     <- list.files(cache_dir, pattern = "^tree_.*\\.rds$", full.names = TRUE)
     if (length(files) == 0L) {
       cli::cli_inform("Inventory cache is already empty.")
