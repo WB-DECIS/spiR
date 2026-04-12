@@ -1,21 +1,29 @@
 Package: spiR
 Title: Statistical Performance Indicators Data Access
 Version: 0.0.0.9000
-Authors@R: 
+Authors@R:
     person("World Bank", "DECDG", email = "decdg@worldbank.org", role = c("aut", "cre"))
-Description: 
-    Access and manage World Bank Statistical Performance Indicators (SPI) data.
-    Provides functions to retrieve SPI final data, index data, raw data, and 
-    output data from GitHub. Includes user-friendly inventory functions for 
-    discovering datasets across different SPI versions.
+Description:
+    Access World Bank Statistical Performance Indicators (SPI) data from
+    GitHub. Provides spi_get(), spi_data(), spi_index(), and spi_aggregates()
+    to retrieve and filter the three core SPI output datasets by country,
+    year, pillar, and dimension. Includes spi_versions() to list available
+    data versions (branches).
+URL: https://github.com/WB-DECIS/spiR
+BugReports: https://github.com/WB-DECIS/spiR/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Depends: 
+Depends:
     R (>= 4.1.0)
 Imports:
+    cli (>= 3.0.0),
     data.table (>= 1.14.0),
+    httr2 (>= 1.0.0),
+    tools,
     utils
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    withr (>= 2.5.0)
+Config/testthat/edition: 3
