@@ -1,0 +1,468 @@
+---
+title: "SPI Data Workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{SPI Data Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+This vignette walks through the main workflows supported by `spiR`: retrieving
+SPI output data from GitHub, filtering to specific countries, years, pillars,
+and dimensions, comparing statistical performance across countries, and
+visualizing results with ggplot2.
+
+## Getting Started
+
+Install `spiR` from GitHub:
+
+```{r install}
+# Using remotes
+remotes::install_github("WB-DECIS/spiR")
+
+# Or using pak
+pak::pak("WB-DECIS/spiR")
+```
+
+Then load the package:
+
+```{r load}
+library(spiR)
+library(data.table)
+library(ggplot2)
+```
+
+### The three core datasets
+
+`spiR` provides access to three SPI output datasets, each returned as a
+`data.table`:
+
+| Function | Dataset | Format |
+|---|---|---|
+| `spi_data()` | Individual indicator scores | Wide — one row per country-year |
+| `spi_index()` | Pillar and overall SPI scores | Wide — one row per country-year |
+| `spi_aggregates()` | Regional aggregate scores | Long — one row per region-year-indicator |
+
+```{r datasets}
+# Individual indicator scores for all countries and years
+dt_data <- spi_data()
+
+# Pillar-level and overall SPI index scores
+dt_index <- spi_index()
+
+# Regional aggregate scores (regions only — countries excluded)
+dt_agg <- spi_aggregates()
+```
+
+Each dataset is a `data.table`. Key columns in `spi_index()`:
+
+- `iso3c` — ISO 3166-1 alpha-3 country code
+- `country` — country name
+- `date` — year (integer)
+- `SPI.INDEX` — overall SPI score (0–100)
+- `SPI.INDEX.PIL1` through `SPI.INDEX.PIL5` — pillar scores
+
+### Available versions
+
+SPI data versions correspond to Git branches in the
+[World Bank SPI repository](https://github.com/worldbank/SPI). Use
+`spi_versions()` to see what is available:
+
+```{r versions}
+spi_versions()
+#> [1] "master"   "SPI2024"  "SPI2023"  "SPI2022"  ...
+```
+
+The default version is `"master"` (latest stable). Pass any branch name as
+the `version` argument to retrieve historical data.
+
+---
+
+## Filtering Data
+
+All three functions accept the same set of filter arguments:
+
+| Argument | Type | Description |
+|---|---|---|
+| `country` | Character vector of ISO3C codes | Applies to `data` and `index` |
+| `region` | Character vector of region names | Applies to `aggregates` only |
+| `year` | Integer or numeric vector | Applies to all types |
+| `pillar` | Integer 1–5 | Column filter for `data`/`index`; row filter for `aggregates` |
+| `dimension` | Character (e.g. `"5.2"`) | Column filter for `data`/`index`; row filter for `aggregates`. Overrides `pillar` when both supplied |
+| `version` | Character branch name | Applies to all types |
+
+### By country
+
+```{r filter-country}
+# Several European countries
+europe <- spi_index(country = c("NOR", "SWE", "FIN", "DNK", "ISL"))
+```
+
+### By year
+
+```{r filter-year}
+# Most recent three years
+recent <- spi_index(year = 2022:2024)
+
+# Single year
+y2024 <- spi_index(year = 2024L)
+```
+
+### By pillar
+
+Restrict to indicator columns for a single pillar. Identifier columns
+(`iso3c`, `date`, `country`, `SPI.INDEX`, etc.) are always returned.
+
+```{r filter-pillar}
+# Pillar 3: Data Products — only SDG-reporting indicator columns
+dt_p3 <- spi_data(pillar = 3L)
+
+# Pillar 5 index scores for all countries
+idx_p5 <- spi_index(pillar = 5L)
+```
+
+### By dimension
+
+Dimensions are coded as `"<pillar>.<dimension>"` (e.g. `"4.1"` for censuses
+and surveys, `"5.2"` for standards and methods). When `dimension` is supplied
+it overrides `pillar`.
+
+```{r filter-dimension}
+# Standards and methods (Pillar 5, Dimension 2)
+standards <- spi_index(dimension = "5.2")
+
+# Census and survey availability indicators only
+census_ind <- spi_data(dimension = "4.1")
+```
+
+### Combining filters
+
+Filters can be combined. Results are subsetted in all dimensions simultaneously:
+
+```{r filter-combined}
+# Sub-Saharan Africa members, Pillar 4, 2020–2024
+ssa_p4 <- spi_index(
+  country = c("KEN", "ETH", "TZA", "UGA", "RWA", "MOZ", "GHA", "SEN"),
+  pillar  = 4L,
+  year    = 2020:2024
+)
+```
+
+### Regional aggregates
+
+`spi_aggregates()` uses `region` instead of `country`. Region names follow
+the World Bank classification:
+
+```{r filter-aggregates}
+# Pillar 1 scores for two regions
+ssa_agg <- spi_aggregates(
+  region = c("Africa Eastern and Southern", "Africa Western and Central"),
+  pillar = 1L,
+  year   = 2020:2024
+)
+```
+
+### Using a specific version
+
+```{r filter-version}
+# Retrieve 2023 release data
+dt_2023rel <- spi_index(version = "SPI2023")
+```
+
+---
+
+## Comparing Countries
+
+### Pillar profiles for a set of countries
+
+Retrieve index scores, reshape to long format with `data.table::melt()`, and
+compare pillar profiles across countries:
+
+```{r compare-pillars}
+# Select a diverse set of countries
+countries <- c("NOR", "MEX", "KEN", "BGD", "UGA", "BRA", "IND", "ETH")
+
+idx <- spi_index(country = countries, year = 2024L)
+
+# Keep only the five pillar score columns plus identifiers
+pillar_cols <- c("country", "iso3c", "date",
+                 paste0("SPI.INDEX.PIL", 1:5))
+idx_pillars <- idx[, ..pillar_cols]
+
+# Reshape wide → long: one row per country-pillar
+idx_long <- melt(
+  idx_pillars,
+  id.vars         = c("country", "iso3c", "date"),
+  measure.vars    = paste0("SPI.INDEX.PIL", 1:5),
+  variable.name   = "pillar",
+  value.name      = "score",
+  variable.factor = FALSE
+)
+
+# Map pillar codes to readable labels
+pillar_labels <- setNames(
+  paste("Pillar", 1:5),
+  paste0("SPI.INDEX.PIL", 1:5)
+)
+idx_long[, pillar_label := pillar_labels[pillar]]
+```
+
+### Tracking a country over time
+
+```{r time-trend}
+# Overall SPI index score for Kenya, 2016–2024
+ken <- spi_index(country = "KEN")
+ken_trend <- ken[, .(date, SPI.INDEX,
+                     SPI.INDEX.PIL1, SPI.INDEX.PIL2, SPI.INDEX.PIL3,
+                     SPI.INDEX.PIL4, SPI.INDEX.PIL5)]
+
+# Reshape to long for plotting all pillars over time
+ken_long <- melt(
+  ken_trend,
+  id.vars       = "date",
+  variable.name = "series",
+  value.name    = "score"
+)
+```
+
+### Top and bottom performers
+
+```{r top-bottom}
+# All countries in the latest year
+latest_year <- spi_index(year = 2024L)[
+  , .(country, iso3c, SPI.INDEX,
+      SPI.INDEX.PIL1, SPI.INDEX.PIL2, SPI.INDEX.PIL3,
+      SPI.INDEX.PIL4, SPI.INDEX.PIL5)
+]
+
+# Sort by overall score
+setorder(latest_year, -SPI.INDEX)
+
+# Top 10 and bottom 10
+top10    <- head(latest_year, 10)
+bottom10 <- tail(latest_year, 10)
+```
+
+---
+
+## Visualization
+
+The examples below use `ggplot2`.
+
+### Overall SPI score by country (bar chart)
+
+```{r plot-bar}
+# 8 countries for a compact comparison
+countries <- c("NOR", "MEX", "KEN", "BGD", "UGA", "BRA", "IND", "ETH")
+idx <- spi_index(country = countries, year = 2024L)
+
+# Exclude countries with no overall score in this year
+idx <- idx[!is.na(SPI.INDEX)]
+
+ggplot(idx, aes(x = reorder(country, SPI.INDEX), y = SPI.INDEX)) +
+  geom_col(fill = "#0071BC") +
+  geom_text(aes(label = round(SPI.INDEX, 1)),
+            hjust = -0.2, size = 3.5) +
+  coord_flip() +
+  scale_y_continuous(limits = c(0, 105), expand = expansion(mult = 0)) +
+  labs(
+    title   = "SPI Overall Score (2024)",
+    x       = NULL,
+    y       = "SPI Score (0–100)",
+    caption = "Source: World Bank Statistical Performance Indicators"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+### Pillar breakdown across countries (grouped bar)
+
+```{r plot-grouped-bar}
+pillar_cols  <- paste0("SPI.INDEX.PIL", 1:5)
+idx_pillars  <- idx[, c("country", pillar_cols), with = FALSE]
+
+idx_long <- melt(
+  idx_pillars,
+  id.vars         = "country",
+  measure.vars    = pillar_cols,
+  variable.name   = "pillar",
+  value.name      = "score",
+  variable.factor = FALSE
+)
+
+pillar_labels <- setNames(
+  paste("Pillar", 1:5),
+  paste0("SPI.INDEX.PIL", 1:5)
+)
+idx_long[, pillar_label := pillar_labels[pillar]]
+
+ggplot(idx_long, aes(x = country, y = score, fill = pillar_label)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_brewer(palette = "Set2", name = NULL) +
+  scale_y_continuous(limits = c(0, 105), expand = expansion(mult = 0)) +
+  labs(
+    title   = "SPI Pillar Scores by Country (2024)",
+    x       = NULL,
+    y       = "Score (0–100)",
+    caption = "Source: World Bank Statistical Performance Indicators"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "bottom")
+```
+
+### Time trend (line chart)
+
+```{r plot-trend}
+# Overall SPI score over time for a group of countries
+countries <- c("NOR", "KEN", "BGD", "ETH")
+idx       <- spi_index(country = countries)
+
+ggplot(idx, aes(x = date, y = SPI.INDEX, colour = country)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_continuous(breaks = seq(2016, 2024, by = 2)) +
+  scale_y_continuous(limits = c(0, 100)) +
+  labs(
+    title   = "SPI Overall Score Over Time",
+    x       = NULL,
+    y       = "SPI Score (0–100)",
+    colour  = NULL,
+    caption = "Source: World Bank Statistical Performance Indicators"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom")
+```
+
+### Pillar radar / heatmap (faceted bar)
+
+A faceted view makes it easy to compare pillar strengths and weaknesses
+across countries:
+
+```{r plot-facet}
+countries <- c("NOR", "MEX", "KEN", "BGD")
+idx       <- spi_index(country = countries, year = 2024L)
+
+pillar_cols <- paste0("SPI.INDEX.PIL", 1:5)
+idx_long    <- melt(
+  idx[, c("country", pillar_cols), with = FALSE],
+  id.vars         = "country",
+  measure.vars    = pillar_cols,
+  variable.name   = "pillar",
+  value.name      = "score",
+  variable.factor = FALSE
+)
+idx_long[, pillar_label := paste("Pillar", sub("SPI.INDEX.PIL", "", pillar, fixed = TRUE))]
+
+ggplot(idx_long, aes(x = pillar_label, y = score, fill = pillar_label)) +
+  geom_col(show.legend = FALSE) +
+  geom_hline(yintercept = 50, linetype = "dashed", colour = "grey60") +
+  facet_wrap(~country, ncol = 2) +
+  scale_y_continuous(limits = c(0, 105), expand = expansion(mult = 0)) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title   = "Pillar Scores by Country (2024)",
+    x       = NULL,
+    y       = "Score (0–100)",
+    caption = "Source: World Bank Statistical Performance Indicators"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        strip.text  = element_text(face = "bold"))
+```
+
+### Regional aggregates over time
+
+```{r plot-aggregates}
+regions <- c(
+  "Africa Eastern and Southern",
+  "Africa Western and Central",
+  "South Asia",
+  "Europe & Central Asia"
+)
+
+agg <- spi_aggregates(region = regions, year = 2019:2024)
+
+# Filter to overall SPI index scores only
+agg_spi <- agg[source_id == "SPI.INDEX"]
+# Use a descriptive column name for the legend
+agg_spi[, region_label := country]
+
+ggplot(agg_spi, aes(x = date, y = value, colour = region_label)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_x_continuous(breaks = 2019:2024) +
+  scale_y_continuous(limits = c(0, 100)) +
+  labs(
+    title   = "SPI Overall Score by Region",
+    x       = NULL,
+    y       = "SPI Score (0–100)",
+    colour  = "Region",
+    caption = "Source: World Bank Statistical Performance Indicators"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        legend.text      = element_text(size = 9)) +
+  guides(colour = guide_legend(ncol = 2))
+```
+
+---
+
+## Caching and Versions
+
+`spiR` caches downloaded files in-session to avoid redundant network requests.
+Downloaded files are cached per data type and version, so repeated calls with
+different `country` or `year` filters draw from the same local cache rather
+than re-downloading:
+
+```{r cache}
+# First call: downloads from GitHub
+dt <- spi_index(year = 2024L)
+
+# Subsequent calls: served from cache instantly (different filter, same file)
+dt <- spi_index(year = 2022L)
+
+# Clear the cache (e.g., after a data update)
+spi_clear_cache()
+
+# Force a fresh download (cache was cleared)
+dt <- spi_index(year = 2024L)
+```
+
+### Managing the data inventory
+
+`spiR` also maintains a local inventory of available SPI data versions
+(GitHub branches). The inventory is fetched automatically on first use and
+cached between sessions. Use these functions to manage it:
+
+```{r inventory}
+# Refresh the inventory from GitHub (e.g., after a new SPI release)
+spi_update_inventory()
+
+# Remove the local inventory cache entirely (forces a fresh fetch on next call)
+spi_clear_inventory()
+```
+
+To compare data across SPI releases, use the `version` argument:
+
+```{r compare-versions}
+idx_current <- spi_index(country = "KEN")
+idx_2023rel <- spi_index(country = "KEN", version = "SPI2023")
+idx_2022rel <- spi_index(country = "KEN", version = "SPI2022")
+```
+
+---
+
+## Further Reading
+
+- [SPI Program page](https://www.worldbank.org/en/programs/statistical-performance-indicators) — overview, interactive data explorer
+- [SPI Handbook](https://worldbank.github.io/SPI/measuring-the-statistical-performance-of-countries-an-overview-of-the-statistical-performance-indicators-and-index.html#indicator-metadata) — full methodology and indicator metadata
+- [SPI GitHub repository](https://github.com/worldbank/SPI) — raw data and code
+- [spiR function reference](https://wb-decis.github.io/spiR/reference/) — all exported functions

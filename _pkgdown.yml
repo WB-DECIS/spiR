@@ -1,0 +1,43 @@
+url: https://wb-decis.github.io/spiR/
+
+home:
+  title: spiR — Statistical Performance Indicators Data Access
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/WB-DECIS/spiR
+      aria-label: GitHub
+
+reference:
+  - title: "Data Access"
+    desc: "Retrieve SPI output data from GitHub"
+    contents:
+      - spi_get
+      - spi_data
+      - spi_index
+      - spi_aggregates
+  - title: "Versions & Cache"
+    desc: "Manage data versions and the in-session download cache"
+    contents:
+      - spi_versions
+      - spi_clear_cache
+      - spi_update_inventory
+      - spi_clear_inventory
+  - title: "Package"
+    contents:
+      - spiR-package
+
+articles:
+  - title: "Workflows"
+    contents:
+      - spi-data-workflows
+
+news:
+  releases:
+    - text: "Version 0.1.0"
+      href: https://github.com/WB-DECIS/spiR/releases/tag/v0.1.0
