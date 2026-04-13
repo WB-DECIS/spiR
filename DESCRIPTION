@@ -1,6 +1,6 @@
 Package: spiR
 Title: Statistical Performance Indicators Data Access
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("World Bank", "DECDG", email = "decdg@worldbank.org", role = c("aut", "cre"))
 Description:
@@ -24,6 +24,11 @@ Imports:
     tools,
     utils
 Suggests:
+    ggplot2 (>= 3.4.0),
+    knitr (>= 1.40),
+    rmarkdown (>= 2.20),
     testthat (>= 3.0.0),
     withr (>= 2.5.0)
+VignetteBuilder: knitr
+Config/Needs/website: pkgdown
 Config/testthat/edition: 3
