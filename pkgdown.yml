@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   spi-data-workflows: spi-data-workflows.html
-last_built: 2026-04-13T01:06Z
+last_built: 2026-04-13T14:42Z
 urls:
   reference: https://wb-decis.github.io/spiR/reference
   article: https://wb-decis.github.io/spiR/articles
