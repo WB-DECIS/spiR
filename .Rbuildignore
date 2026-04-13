@@ -2,6 +2,7 @@
 ^renv\.lock$
 ^\.cg-docs$
 ^\.github$
+^_pkgdown\.yml$
 ^check_out\.txt$
 ^check_err\.txt$
 ^run_check\.R$
