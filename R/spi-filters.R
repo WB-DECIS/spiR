@@ -113,7 +113,10 @@ filter_columns_by_dimension <- function(dt, dimension) {
 #'
 #' @param dt A `data.table` (long format, from
 #'   `SPI_databank_country_and_aggregates.csv`).
-#' @param pillar Integer 1–5, or `NULL`.
+#' @param pillar Integer 1–5, or `NULL`. Matches rows where `source_id`
+#'   starts with `SPI.D{pillar}.` (individual indicators). Note: pillar-level
+#'   summary rows (e.g. `SPI.INDEX.PIL1`) are **not** matched by this filter;
+#'   to retrieve those, omit `pillar` and filter on `source_id` manually.
 #' @param dimension Character string in `"P.D"` format, or `NULL`.
 #' @return A filtered `data.table`.
 #' @keywords internal

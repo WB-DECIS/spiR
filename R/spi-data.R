@@ -35,7 +35,8 @@ SPI_REQUIRED_COLS <- c("iso3c", "date")
 #'   `"master"` (the latest stable version). Use [spi_versions()] to list
 #'   available branches.
 #' @param country Character vector of ISO 3166-1 alpha-3 country codes (e.g.
-#'   `c("NOR", "SWE")`). Applies to `type = "data"` and `type = "index"`
+#'   `c("NOR", "SWE")`). Case-insensitive; codes are coerced to uppercase
+#'   automatically. Applies to `type = "data"` and `type = "index"`
 #'   only. `NULL` returns all countries.
 #' @param year Integer vector of years (e.g. `2023:2024`). Applies to all
 #'   types. `NULL` returns all years.
@@ -99,6 +100,7 @@ spi_get <- function(type = "data",
         "{.arg country} must be a character vector with no NA values.",
         "x" = "You supplied a {.cls {class(country)[1L]}}."
       ))
+    country <- toupper(trimws(country))
   }
 
   if (!is.null(region)) {
@@ -129,6 +131,10 @@ spi_get <- function(type = "data",
         "{.arg year} must be a numeric or integer vector with no NA values.",
         "x" = "You supplied a {.cls {class(year)[1L]}}."
       ))
+    if (any(year < 2016L))
+      cli::cli_warn(
+        "{.arg year} contains values before 2016. SPI data starts in 2016; those years will return no rows."
+      )
   }
 
   if (!is.null(pillar)) {
@@ -200,6 +206,11 @@ spi_get <- function(type = "data",
     }
     dt <- filter_rows_by_pillar_dimension(dt, pillar, dimension)
   }
+
+  if (nrow(dt) == 0L)
+    cli::cli_warn(
+      "No rows matched the supplied filters. Verify country/region codes, year range, and {.arg version}."
+    )
 
   return(dt)
 }
