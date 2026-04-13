@@ -61,6 +61,11 @@
       ],
       "Hash": "df99cd4333ce592df5173d6ad39b5c14"
     },
+    "ggplot2": {
+      "Package": "ggplot2",
+      "Version": "3.5.2",
+      "Source": "Repository"
+    },
     "glue": {
       "Package": "glue",
       "Version": "1.6.2",
@@ -92,6 +97,11 @@
         "withr"
       ],
       "Hash": "03d741c92fda96d98c3a3f22494e3b4a"
+    },
+    "knitr": {
+      "Package": "knitr",
+      "Version": "1.50",
+      "Source": "Repository"
     },
     "lifecycle": {
       "Package": "lifecycle",
@@ -157,12 +167,22 @@
       ],
       "Hash": "34c0d101f4613098abc538b82e0d86c5"
     },
+    "rmarkdown": {
+      "Package": "rmarkdown",
+      "Version": "2.29",
+      "Source": "Repository"
+    },
     "sys": {
       "Package": "sys",
       "Version": "3.4.2",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "3a1be13d68d47a8cd0bfd74739ca1555"
+    },
+    "testthat": {
+      "Package": "testthat",
+      "Version": "3.3.2",
+      "Source": "Repository"
     },
     "vctrs": {
       "Package": "vctrs",
