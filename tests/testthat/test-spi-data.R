@@ -327,3 +327,19 @@ test_that("spi_get('data') with empty country vector returns 0-row data.table (P
   expect_s3_class(result, "data.table")
   expect_equal(nrow(result), 0L)
 })
+
+# ---------------------------------------------------------------------------
+# Multi-region filtering for aggregates (F11)
+# ---------------------------------------------------------------------------
+
+test_that("spi_get('aggregates') filters by multiple region names (F11)", {
+  local_mocked_bindings(spi_download = mock_spi_download)
+  result <- spi_get(
+    "aggregates",
+    region = c("Africa Eastern and Southern", "World")
+  )
+  expect_setequal(
+    unique(result[["country"]]),
+    c("Africa Eastern and Southern", "World")
+  )
+})
