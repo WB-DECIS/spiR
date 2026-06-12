@@ -137,3 +137,86 @@ spi_aggregates <- function(version = "master",
     dimension = dimension
   )
 }
+
+
+
+#' Retrieve specific SPI indicator columns
+#'
+#' A convenience wrapper around `spi_get("data", ...)` that returns only
+#' requested SPI indicator columns from `SPI_data.csv`.
+#'
+#' @param indicator Character vector of SPI indicator column names,
+#'   e.g. `"SPI.D1.5.POV"`.
+#' @param version Character. Branch name in the SPI repository. Defaults
+#'   to `"master"`.
+#' @param country Character vector of ISO 3166-1 alpha-3 country codes.
+#'   `NULL` returns all countries.
+#' @param year Numeric or integer vector of years. `NULL` returns all years.
+#' @param include_raw Logical scalar. If `TRUE`, also returns corresponding
+#'   `RAW.D...` columns for the requested indicators when available.
+#'
+#' @return A `data.table` containing identifier/metadata columns plus the
+#'   requested `SPI.D...` indicator columns (and optional raw columns).
+#' @seealso [spi_data()], [spi_get()], [spi_versions()]
+#' @examples
+#' \dontrun{
+#' spi_indicator("SPI.D1.5.POV", country = "CHL", year = 2024)
+#' spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS"), include_raw = TRUE)
+#' }
+#' @export
+spi_indicator <- function(indicator,
+                          version = "master",
+                          country = NULL,
+                          year = NULL,
+                          include_raw = FALSE) {
+  if (!is.character(indicator) || anyNA(indicator) || length(indicator) == 0L) {
+    cli::cli_abort(c(
+      "{.arg indicator} must be a non-empty character vector with no NA values.",
+      "x" = "You supplied a {.cls {class(indicator)[1L]}} of length {length(indicator)}."
+    ))
+  }
+
+  if (!is.logical(include_raw) || length(include_raw) != 1L || is.na(include_raw)) {
+    cli::cli_abort(c(
+      "{.arg include_raw} must be a single logical value.",
+      "x" = "You supplied {.val {include_raw}}."
+    ))
+  }
+
+  indicator <- toupper(trimws(indicator))
+  invalid <- indicator[!grepl("^SPI\\.D[0-9]+\\.[0-9]+\\.[A-Z0-9_.]+$", indicator)]
+  if (length(invalid) > 0L) {
+    cli::cli_abort(c(
+      "{.arg indicator} must contain valid SPI indicator column names like {.val SPI.D1.5.POV}.",
+      "x" = "Invalid names: {.field {invalid}}."
+    ))
+  }
+
+  dt <- spi_get(
+    type      = "data",
+    version   = version,
+    country   = country,
+    year      = year,
+    pillar    = NULL,
+    dimension = NULL
+  )
+
+  missing <- setdiff(indicator, names(dt))
+  if (length(missing) > 0L) {
+    cli::cli_abort(c(
+      "Requested indicator columns are not available in the downloaded SPI data.",
+      "x" = "Missing columns: {.field {missing}}.",
+      "i" = "Use {.fn spi_data()} to inspect available indicator names or check {.arg version}."
+    ))
+  }
+
+  keep_cols <- c(identify_id_columns(dt), indicator)
+  if (include_raw) {
+    raw_cols <- paste0("RAW.", sub("^SPI\\.", "", indicator))
+    raw_cols <- raw_cols[raw_cols %in% names(dt)]
+    keep_cols <- c(keep_cols, raw_cols)
+  }
+  keep_cols <- unique(keep_cols)
+
+  dt[, keep_cols, with = FALSE]
+}
