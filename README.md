@@ -53,6 +53,10 @@ spi_index(dimension = "5.2")
 # --- Regional aggregates ---
 spi_aggregates(region = "Africa Eastern and Southern", pillar = 1L)
 
+# --- Named indicator columns ---
+spi_indicator("SPI.D1.5.POV", country = "CHL", year = 2024L)
+spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS"), include_raw = TRUE)
+
 # --- Specific version (branch) ---
 spi_data(version = "SPI2023")
 
@@ -73,9 +77,10 @@ spi_clear_inventory()
 
 | Function | Dataset | Format |
 |----------|---------|--------|
-| `spi_data()` | `SPI_data.csv` | Wide — one row per country-year, indicator columns |
+| `spi_data()` | `SPI_data.csv` | Wide — one row per country-year, all indicator columns |
 | `spi_index()` | `SPI_index.csv` | Wide — pillar and overall SPI scores per country-year |
 | `spi_aggregates()` | `SPI_databank_country_and_aggregates.csv` | Long — regions only, one row per region-year-indicator |
+| `spi_indicator()` | `SPI_data.csv` | Wide — selected indicator columns only (with optional raw values) |
 
 All functions return a [`data.table`](https://r-datatable.com/).
 
