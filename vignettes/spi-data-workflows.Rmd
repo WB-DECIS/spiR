@@ -143,6 +143,29 @@ standards <- spi_index(dimension = "5.2")
 census_ind <- spi_data(dimension = "4.1")
 ```
 
+### Named indicators with `spi_indicator()`
+
+If you already know the exact SPI indicator codes, `spi_indicator()` lets you
+retrieve only those columns for the selected country/year range rather than the
+full dimension. The first argument is `indicator`, so you can call it either
+positionally or with `indicator =`.
+
+```{r filter-indicator}
+# One specific known indicator for Chile in 2024
+spi_indicator(indicator = "SPI.D1.5.POV", country = "CHL", year = 2024L)
+
+# Two known indicators, including raw values when available
+spi_indicator(
+  indicator = c("SPI.D1.5.POV", "SPI.D2.1.GDDS"),
+  include_raw = TRUE
+)
+```
+
+`spi_indicator()` is a filtered form of `spi_data()` that returns only the
+requested indicator columns. Use `spi_data(dimension = ...)` when you want all
+indicators in a dimension, and use `spi_indicator()` when you want a small set
+of exact indicator columns.
+
 ### Combining filters
 
 Filters can be combined. Results are subsetted in all dimensions simultaneously:
