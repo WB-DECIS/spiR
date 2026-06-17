@@ -93,6 +93,8 @@ All functions return a [`data.table`](https://r-datatable.com/).
 | `year` | Integer or numeric vector | All types |
 | `pillar` | Integer 1–5 | All types (column filter for `"data"`/`"index"`, row filter for `"aggregates"`) |
 | `dimension` | Character `"P.D"` (e.g. `"5.2"`) | All types; overrides `pillar` |
+| `indicator` | Character vector of `SPI.D...` codes | `spi_indicator()` only |
+| `include_raw` | Logical scalar | `spi_indicator()` only; also return matching `RAW.D...` columns |
 | `version` | Character branch name | All types |
 
 ## Versioning
