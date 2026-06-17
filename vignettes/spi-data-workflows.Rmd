@@ -40,9 +40,9 @@ library(data.table)
 library(ggplot2)
 ```
 
-### The three core datasets
+### The four core data access functions
 
-`spiR` provides access to three SPI output datasets, each returned as a
+`spiR` provides access to four main SPI data access functions, each returned as a
 `data.table`:
 
 | Function | Dataset | Format |
@@ -50,6 +50,7 @@ library(ggplot2)
 | `spi_data()` | Individual indicator scores | Wide — one row per country-year |
 | `spi_index()` | Pillar and overall SPI scores | Wide — one row per country-year |
 | `spi_aggregates()` | Regional aggregate scores | Long — one row per region-year-indicator |
+| `spi_indicator()` | Selected named indicator columns | Wide — one row per country-year |
 
 ```{r datasets}
 # Individual indicator scores for all countries and years
@@ -160,6 +161,9 @@ spi_indicator(
   include_raw = TRUE
 )
 ```
+
+Setting `include_raw = TRUE` also returns the corresponding `RAW.D...`
+columns when they are available in `SPI_data.csv`.
 
 `spi_indicator()` is a filtered form of `spi_data()` that returns only the
 requested indicator columns. Use `spi_data(dimension = ...)` when you want all
