@@ -173,6 +173,7 @@ test_that("spi_aggregates() excludes individual country rows (P2.10)", {
 
 # ---------------------------------------------------------------------------
 # spi_indicator()
+# ---------------------------------------------------------------------------
 
 mock_spi_get_for_indicator <- function(type = "data",
                                        version = "master",
@@ -199,10 +200,47 @@ mock_spi_get_for_indicator <- function(type = "data",
   )
 }
 
+mock_spi_get_for_indicator_no_raw <- function(type = "data",
+                                              version = "master",
+                                              country = NULL,
+                                              year = NULL,
+                                              pillar = NULL,
+                                              dimension = NULL,
+                                              region = NULL) {
+  spi_get_call_log <<- list(
+    type      = type,
+    version   = version,
+    country   = country,
+    year      = year,
+    pillar    = pillar,
+    dimension = dimension,
+    region    = region
+  )
+  data.table::data.table(
+    iso3c        = "NOR",
+    date         = 2024L,
+    country      = "Norway",
+    SPI.D1.5.POV = 1
+  )
+}
+
 test_that("spi_indicator() calls spi_get() with type = 'data'", {
   local_mocked_bindings(spi_get = mock_spi_get_for_indicator)
   spi_indicator("SPI.D1.5.POV")
   expect_equal(spi_get_call_log$type, "data")
+})
+
+test_that("spi_indicator() forwards version, country, and year to spi_get()", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_indicator)
+  spi_indicator(
+    indicator = "SPI.D1.5.POV",
+    version   = "SPI2023",
+    country   = "KEN",
+    year      = 2022:2024
+  )
+  expect_equal(spi_get_call_log$version, "SPI2023")
+  expect_equal(spi_get_call_log$country, "KEN")
+  expect_equal(spi_get_call_log$year, 2022:2024)
 })
 
 test_that("spi_indicator() includes requested SPI indicator columns", {
@@ -218,9 +256,46 @@ test_that("spi_indicator() returns raw columns when include_raw = TRUE", {
   expect_true("RAW.D1.5.POV" %in% names(result))
 })
 
+test_that("spi_indicator() does not error when include_raw = TRUE but raw column is absent", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_indicator_no_raw)
+  result <- spi_indicator("SPI.D1.5.POV", include_raw = TRUE)
+  expect_false("RAW.D1.5.POV" %in% names(result))
+  expect_true("SPI.D1.5.POV" %in% names(result))
+})
+
 test_that("spi_indicator() errors when indicator names are invalid", {
   expect_error(
     spi_indicator("INVALID"),
     "must contain valid SPI indicator column names"
+  )
+})
+
+test_that("spi_indicator() errors when indicator is NULL", {
+  expect_error(
+    spi_indicator(NULL),
+    "must be a non-empty character vector"
+  )
+})
+
+test_that("spi_indicator() errors when indicator contains NA", {
+  expect_error(
+    spi_indicator(NA_character_),
+    "must be a non-empty character vector"
+  )
+})
+
+test_that("spi_indicator() errors when a valid indicator name is absent from the data", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_indicator)
+  expect_error(
+    spi_indicator("SPI.D2.1.GDDS"),
+    "Requested indicator columns are not available"
+  )
+})
+
+test_that("spi_indicator() errors when only some requested indicators are present", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_indicator)
+  expect_error(
+    spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS")),
+    "Missing columns"
   )
 })
