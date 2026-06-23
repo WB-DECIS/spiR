@@ -17,7 +17,7 @@ source("R/spi-wrappers.R")
 source("R/spi-data.R")
 
 # Run the test with two indicators
-r2 <- spi_aggregates(region = "Africa Eastern and Southern", pillar = 3)
+r2 <- spi_aggregates(region = "Africa Eastern and Southern", pillar = 1L, year=2020)
 
 cat("Result:\n")
 print(r2)

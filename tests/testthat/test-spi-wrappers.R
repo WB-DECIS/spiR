@@ -156,11 +156,26 @@ test_that("spi_data() returns correct rows when country filter applied (P2.10)",
   expect_equal(result[["iso3c"]], "NOR")
 })
 
+test_that("spi_data() keeps only id columns and indicator payload columns", {
+  local_mocked_bindings(spi_download = mock_spi_download_wrappers)
+  result <- spi_data()
+  expect_setequal(names(result), c("iso3c", "date", "country"))
+})
+
 test_that("spi_index() returns a data.table with SPI.INDEX column (P2.10)", {
   local_mocked_bindings(spi_download = mock_spi_download_wrappers)
   result <- spi_index()
   expect_s3_class(result, "data.table")
   expect_true("SPI.INDEX" %in% names(result))
+})
+
+test_that("spi_index() keeps only id columns and index payload columns", {
+  local_mocked_bindings(spi_download = mock_spi_download_wrappers)
+  result <- spi_index()
+  expect_setequal(
+    names(result),
+    c("iso3c", "date", "country", "SPI.INDEX", "SPI.D1.5.POV")
+  )
 })
 
 test_that("spi_aggregates() excludes individual country rows (P2.10)", {
@@ -169,6 +184,12 @@ test_that("spi_aggregates() excludes individual country rows (P2.10)", {
   # "NOR" in the mock aggregates dt is a country row — should be filtered out
   expect_false("NOR" %in% result[["iso3c"]])
   expect_true(nrow(result) > 0L)
+})
+
+test_that("spi_aggregates() keeps only id columns and aggregate value payload", {
+  local_mocked_bindings(spi_download = mock_spi_download_wrappers)
+  result <- spi_aggregates()
+  expect_setequal(names(result), c("iso3c", "date", "country", "source_id", "value"))
 })
 
 # ---------------------------------------------------------------------------

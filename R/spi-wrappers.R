@@ -38,7 +38,7 @@ spi_data <- function(version = "master",
                      year = NULL,
                      pillar = NULL,
                      dimension = NULL) {
-  spi_get(
+  dt <- spi_get(
     type      = "data",
     version   = version,
     country   = country,
@@ -46,6 +46,12 @@ spi_data <- function(version = "master",
     pillar    = pillar,
     dimension = dimension
   )
+
+  indicator_cols <- names(dt)[grepl("^SPI\\.D[0-9]|^RAW\\.D[0-9]", names(dt))]
+  keep_cols <- unique(c("iso3c", "date", "country", indicator_cols))
+  keep_cols <- keep_cols[keep_cols %in% names(dt)]
+
+  dt[, keep_cols, with = FALSE]
 }
 
 #' Retrieve SPI index scores
@@ -83,7 +89,7 @@ spi_index <- function(version = "master",
                       year = NULL,
                       pillar = NULL,
                       dimension = NULL) {
-  spi_get(
+  dt <- spi_get(
     type      = "index",
     version   = version,
     country   = country,
@@ -91,6 +97,14 @@ spi_index <- function(version = "master",
     pillar    = pillar,
     dimension = dimension
   )
+
+  payload_cols <- names(dt)[
+    grepl("^SPI\\.INDEX|^SPI\\.DIM|^SPI\\.D[0-9]|^RAW\\.D[0-9]", names(dt))
+  ]
+  keep_cols <- unique(c("iso3c", "date", "country", payload_cols))
+  keep_cols <- keep_cols[keep_cols %in% names(dt)]
+
+  dt[, keep_cols, with = FALSE]
 }
 
 #' Retrieve SPI regional aggregate scores
@@ -128,7 +142,7 @@ spi_aggregates <- function(version = "master",
                            year = NULL,
                            pillar = NULL,
                            dimension = NULL) {
-  spi_get(
+  dt <- spi_get(
     type      = "aggregates",
     version   = version,
     region    = region,
@@ -136,6 +150,11 @@ spi_aggregates <- function(version = "master",
     pillar    = pillar,
     dimension = dimension
   )
+
+  keep_cols <- c("iso3c", "date", "country", "source_id", "value")
+  keep_cols <- keep_cols[keep_cols %in% names(dt)]
+
+  dt[, keep_cols, with = FALSE]
 }
 
 
