@@ -210,7 +210,7 @@ spi_indicator <- function(indicator,
     ))
   }
 
-  keep_cols <- c(identify_id_columns(dt), indicator)
+  keep_cols <- c("iso3c", "date", "country", indicator)
   if (include_raw) {
     raw_cols <- paste0("RAW.", sub("^SPI\\.", "", indicator))
     raw_cols <- raw_cols[raw_cols %in% names(dt)]
