@@ -158,6 +158,65 @@ spi_aggregates <- function(version = "master",
 }
 
 
+#' Retrieve SPI country-year metadata
+#'
+#' A convenience wrapper around `spi_get("data", ...)` that returns only
+#' country metadata columns from `SPI_data.csv`. The result preserves one row
+#' per country-year because metadata such as income level and population can
+#' change over time.
+#'
+#' @param version Character. Branch name in the SPI repository. Defaults
+#'   to `"master"`.
+#' @param country Character vector of ISO 3166-1 alpha-3 country codes.
+#'   `NULL` returns all countries.
+#' @param year Numeric or integer vector of years. `NULL` returns all years.
+#'
+#' @return A `data.table` containing `date` and country metadata columns:
+#'   `iso3c`, `iso2c`, `country`, `capital_city`, `longitude`, `latitude`,
+#'   region, administrative region, income level, lending type, and
+#'   population fields.
+#' @seealso [spi_data()], [spi_get()], [spi_versions()]
+#' @examples
+#' \dontrun{
+#' country_info(country = "CHL", year = 2024)
+#' country_info(year = 2020:2024)
+#' }
+#' @export
+country_info <- function(version = "master",
+                         country = NULL,
+                         year = NULL) {
+  dt <- spi_get(
+    type      = "data",
+    version   = version,
+    country   = country,
+    year      = year,
+    pillar    = NULL,
+    dimension = NULL
+  )
+
+  keep_cols <- c(
+    "date", "iso3c", "iso2c", "country", "capital_city", "longitude",
+    "latitude", "region_iso3c", "region_iso2c", "region",
+    "admin_region_iso3c", "admin_region_iso2c", "admin_region",
+    "income_level_iso3c", "income_level_iso2c", "income_level",
+    "lending_type_iso3c", "lending_type_iso2c", "lending_type",
+    "population"
+  )
+
+  missing <- setdiff(keep_cols, names(dt))
+  if (length(missing) > 0L) {
+    cli::cli_abort(c(
+      "Downloaded SPI data is missing required country metadata columns.",
+      "x" = "Missing columns: {.field {missing}}.",
+      "i" = "Check that {.arg version} = {.val {version}} points to a valid SPI release."
+    ))
+  }
+
+  result <- dt[, keep_cols, with = FALSE]
+  result[order(result[["iso3c"]], result[["date"]])]
+}
+
+
 
 #' Retrieve specific SPI indicator columns
 #'

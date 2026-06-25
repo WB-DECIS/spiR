@@ -320,3 +320,104 @@ test_that("spi_indicator() errors when only some requested indicators are presen
     "Missing columns"
   )
 })
+
+# ---------------------------------------------------------------------------
+# country_info()
+# ---------------------------------------------------------------------------
+
+country_info_cols <- c(
+  "date", "iso3c", "iso2c", "country", "capital_city", "longitude",
+  "latitude", "region_iso3c", "region_iso2c", "region",
+  "admin_region_iso3c", "admin_region_iso2c", "admin_region",
+  "income_level_iso3c", "income_level_iso2c", "income_level",
+  "lending_type_iso3c", "lending_type_iso2c", "lending_type",
+  "population"
+)
+
+mock_spi_get_for_country_info <- function(type = "data",
+                                          version = "master",
+                                          country = NULL,
+                                          year = NULL,
+                                          pillar = NULL,
+                                          dimension = NULL,
+                                          region = NULL) {
+  spi_get_call_log <<- list(
+    type      = type,
+    version   = version,
+    country   = country,
+    year      = year,
+    pillar    = pillar,
+    dimension = dimension,
+    region    = region
+  )
+  data.table::data.table(
+    date                  = c(2023L, 2024L, 2024L),
+    iso3c                 = c("NOR", "NOR", "SWE"),
+    iso2c                 = c("NO", "NO", "SE"),
+    country               = c("Norway", "Norway", "Sweden"),
+    capital_city          = c("Oslo", "Oslo", "Stockholm"),
+    longitude             = c(10.75, 10.75, 18.06),
+    latitude              = c(59.91, 59.91, 59.33),
+    region_iso3c          = c("ECS", "ECS", "ECS"),
+    region_iso2c          = c("Z7", "Z7", "Z7"),
+    region                = c(
+      "Europe & Central Asia", "Europe & Central Asia",
+      "Europe & Central Asia"
+    ),
+    admin_region_iso3c    = c(NA_character_, NA_character_, NA_character_),
+    admin_region_iso2c    = c(NA_character_, NA_character_, NA_character_),
+    admin_region          = c(NA_character_, NA_character_, NA_character_),
+    income_level_iso3c    = c("HIC", "HIC", "HIC"),
+    income_level_iso2c    = c("XD", "XD", "XD"),
+    income_level          = c("High income", "High income", "High income"),
+    lending_type_iso3c    = c("LNX", "LNX", "LNX"),
+    lending_type_iso2c    = c("XX", "XX", "XX"),
+    lending_type          = c("Not classified", "Not classified", "Not classified"),
+    population            = c(5400000, 5500000, 10500000),
+    SPI.D1.5.POV          = c(1, 1, 1)
+  )
+}
+
+mock_spi_get_for_country_info_missing_col <- function(...) {
+  dt <- mock_spi_get_for_country_info(...)
+  dt[, income_level_iso2c := NULL]
+  dt
+}
+
+test_that("country_info() calls spi_get() with type = 'data'", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_country_info)
+  country_info()
+  expect_equal(spi_get_call_log$type, "data")
+  expect_null(spi_get_call_log$pillar)
+  expect_null(spi_get_call_log$dimension)
+})
+
+test_that("country_info() forwards version, country, and year", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_country_info)
+  country_info(version = "SPI2023", country = "NOR", year = 2023:2024)
+  expect_equal(spi_get_call_log$version, "SPI2023")
+  expect_equal(spi_get_call_log$country, "NOR")
+  expect_equal(spi_get_call_log$year, 2023:2024)
+})
+
+test_that("country_info() returns requested metadata columns in order", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_country_info)
+  result <- country_info()
+  expect_s3_class(result, "data.table")
+  expect_identical(names(result), country_info_cols)
+})
+
+test_that("country_info() preserves multiple years for the same country", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_country_info)
+  result <- country_info(country = "NOR")
+  expect_equal(result[iso3c == "NOR", .N], 2L)
+  expect_setequal(result[iso3c == "NOR", date], c(2023L, 2024L))
+})
+
+test_that("country_info() errors when required metadata columns are missing", {
+  local_mocked_bindings(spi_get = mock_spi_get_for_country_info_missing_col)
+  expect_error(
+    country_info(),
+    "missing required country metadata columns|income_level_iso2c"
+  )
+})

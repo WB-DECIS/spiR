@@ -1,13 +1,16 @@
 ---
 date: 2026-06-25
 title: "Country Info Metadata Wrapper"
-status: active
+status: completed
+completed-date: 2026-06-25
+completed-phases: [1, 2]
 scope: "Standard"
 phases: 2
 brainstorm: null
 language: "R"
 estimated-effort: "small"
 deviation-policy: "ask"
+execution-report: ".cg-docs/work-reports/2026-06-25-country-info.md"
 tags: [api, country, metadata, spi-data, wrappers]
 ---
 

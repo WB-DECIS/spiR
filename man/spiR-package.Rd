@@ -21,5 +21,10 @@ Useful links:
 \author{
 \strong{Maintainer}: World Bank DECDG \email{decdg@worldbank.org}
 
+Authors:
+\itemize{
+  \item World Bank DECDG \email{decdg@worldbank.org}
+}
+
 }
 \keyword{internal}

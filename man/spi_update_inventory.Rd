@@ -56,7 +56,7 @@ spi_update_inventory(version = "SPI2023")
 \seealso{
 \code{\link[=spi_clear_inventory]{spi_clear_inventory()}}, \code{\link[=spi_versions]{spi_versions()}}
 
-Other spi-inventory-cache: 
-\code{\link{spi_clear_inventory}()}
+Other spi-inventory-cache:
+\code{\link[=spi_clear_inventory]{spi_clear_inventory()}}
 }
 \concept{spi-inventory-cache}
