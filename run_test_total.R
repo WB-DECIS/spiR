@@ -40,6 +40,7 @@ print_result <- function(name, expr) {
   invisible(out)
 }
 
+library(data.table)
 load_spir_code()
 
 # Adjust these inputs if needed.
@@ -49,7 +50,7 @@ year_to_test <- 2024L
 pillar_to_test <- 1L
 dimension_to_test <- "1.5"
 region_to_test <- "Africa Eastern and Southern"
-indicator_to_test <- c("SPI.D5.2.2.NABY", "SPI.D1.5.POV")
+indicator_to_test <- c("SPI.D5.2.2.NABY", "SPI.D1.5.POV", "SPI.D2.1.GDDS")
 
 print_result(
   "spi_data()",
