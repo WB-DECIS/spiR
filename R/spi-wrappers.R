@@ -171,10 +171,13 @@ spi_aggregates <- function(version = "master",
 #'   `NULL` returns all countries.
 #' @param year Numeric or integer vector of years. `NULL` returns all years.
 #'
-#' @return A `data.table` containing `date` and country metadata columns:
-#'   `iso3c`, `iso2c`, `country`, `capital_city`, `longitude`, `latitude`,
-#'   region, administrative region, income level, lending type, and
-#'   population fields.
+#' @return A `data.table` with one row per country-year and these columns,
+#'   in order: `date`, `iso3c`, `iso2c`, `country`, `capital_city`,
+#'   `longitude`, `latitude`, `region_iso3c`, `region_iso2c`, `region`,
+#'   `admin_region_iso3c`, `admin_region_iso2c`, `admin_region`,
+#'   `income_level_iso3c`, `income_level_iso2c`, `income_level`,
+#'   `lending_type_iso3c`, `lending_type_iso2c`, `lending_type`, and
+#'   `population`. Rows are returned in deterministic `iso3c`, `date` order.
 #' @seealso [spi_data()], [spi_get()], [spi_versions()]
 #' @examples
 #' \dontrun{

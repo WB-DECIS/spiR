@@ -16,10 +16,13 @@ to \code{"master"}.}
 \item{year}{Numeric or integer vector of years. \code{NULL} returns all years.}
 }
 \value{
-A \code{data.table} containing \code{date} and country metadata columns:
-\code{iso3c}, \code{iso2c}, \code{country}, \code{capital_city}, \code{longitude}, \code{latitude},
-region, administrative region, income level, lending type, and
-population fields.
+A \code{data.table} with one row per country-year and these columns,
+in order: \code{date}, \code{iso3c}, \code{iso2c}, \code{country}, \code{capital_city},
+\code{longitude}, \code{latitude}, \code{region_iso3c}, \code{region_iso2c}, \code{region},
+\code{admin_region_iso3c}, \code{admin_region_iso2c}, \code{admin_region},
+\code{income_level_iso3c}, \code{income_level_iso2c}, \code{income_level},
+\code{lending_type_iso3c}, \code{lending_type_iso2c}, \code{lending_type}, and
+\code{population}. Rows are returned in deterministic \code{iso3c}, \code{date} order.
 }
 \description{
 A convenience wrapper around \code{spi_get("data", ...)} that returns only

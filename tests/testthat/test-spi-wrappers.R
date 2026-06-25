@@ -351,13 +351,13 @@ mock_spi_get_for_country_info <- function(type = "data",
     region    = region
   )
   data.table::data.table(
-    date                  = c(2023L, 2024L, 2024L),
-    iso3c                 = c("NOR", "NOR", "SWE"),
-    iso2c                 = c("NO", "NO", "SE"),
-    country               = c("Norway", "Norway", "Sweden"),
-    capital_city          = c("Oslo", "Oslo", "Stockholm"),
-    longitude             = c(10.75, 10.75, 18.06),
-    latitude              = c(59.91, 59.91, 59.33),
+    date                  = c(2024L, 2023L, 2024L),
+    iso3c                 = c("SWE", "NOR", "NOR"),
+    iso2c                 = c("SE", "NO", "NO"),
+    country               = c("Sweden", "Norway", "Norway"),
+    capital_city          = c("Stockholm", "Oslo", "Oslo"),
+    longitude             = c(18.06, 10.75, 10.75),
+    latitude              = c(59.33, 59.91, 59.91),
     region_iso3c          = c("ECS", "ECS", "ECS"),
     region_iso2c          = c("Z7", "Z7", "Z7"),
     region                = c(
@@ -373,7 +373,7 @@ mock_spi_get_for_country_info <- function(type = "data",
     lending_type_iso3c    = c("LNX", "LNX", "LNX"),
     lending_type_iso2c    = c("XX", "XX", "XX"),
     lending_type          = c("Not classified", "Not classified", "Not classified"),
-    population            = c(5400000, 5500000, 10500000),
+    population            = c(10500000, 5400000, 5500000),
     SPI.D1.5.POV          = c(1, 1, 1)
   )
 }
@@ -405,6 +405,8 @@ test_that("country_info() returns requested metadata columns in order", {
   result <- country_info()
   expect_s3_class(result, "data.table")
   expect_identical(names(result), country_info_cols)
+  expect_identical(result$iso3c, c("NOR", "NOR", "SWE"))
+  expect_identical(result$date, c(2023L, 2024L, 2024L))
 })
 
 test_that("country_info() preserves multiple years for the same country", {

@@ -22,7 +22,9 @@ The SPI framework is organized around **five pillars**, each capturing a key asp
 
 Each pillar is supported by multiple dimensions and indicators, aggregated into an overall SPI score (0–100) for each country-year. All data and code are published as open data and open code on [GitHub](https://github.com/worldbank/SPI).
 
-`spiR` provides a simple, filter-friendly interface to the three SPI output datasets, with in-session caching to avoid redundant downloads.
+`spiR` provides a simple, filter-friendly interface to the SPI output
+datasets and country metadata wrappers, with in-session caching to avoid
+redundant downloads.
 
 ## Installation
 
@@ -57,6 +59,9 @@ spi_aggregates(region = "Africa Eastern and Southern", pillar = 1L)
 spi_indicator("SPI.D1.5.POV", country = "CHL", year = 2024L)
 spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS"), include_raw = TRUE)
 
+# --- Country-year metadata ---
+country_info(country = "CHL", year = 2024L)
+
 # --- Specific version (branch) ---
 spi_data(version = "SPI2023")
 
@@ -81,6 +86,7 @@ spi_clear_inventory()
 | `spi_index()` | `SPI_index.csv` | Wide — pillar and overall SPI scores per country-year |
 | `spi_aggregates()` | `SPI_databank_country_and_aggregates.csv` | Long — regions only, one row per region-year-indicator |
 | `spi_indicator()` | `SPI_data.csv` | Wide — selected indicator columns only (with optional raw values) |
+| `country_info()` | `SPI_data.csv` | Wide — country-year metadata columns only |
 
 All functions return a [`data.table`](https://r-datatable.com/).
 
@@ -88,7 +94,7 @@ All functions return a [`data.table`](https://r-datatable.com/).
 
 | Argument | Type | Applies to |
 |----------|------|------------|
-| `country` | Character vector of ISO 3166-1 alpha-3 codes | `"data"`, `"index"` |
+| `country` | Character vector of ISO 3166-1 alpha-3 codes | `"data"`, `"index"`, `country_info()` |
 | `region` | Character vector of region names | `"aggregates"` |
 | `year` | Integer or numeric vector | All types |
 | `pillar` | Integer 1–5 | All types (column filter for `"data"`/`"index"`, row filter for `"aggregates"`) |
