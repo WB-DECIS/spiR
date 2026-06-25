@@ -40,9 +40,9 @@ library(data.table)
 library(ggplot2)
 ```
 
-### The four core data access functions
+### The core data access functions
 
-`spiR` provides access to four main SPI data access functions, each returned as a
+`spiR` provides access to five main SPI data access functions, each returned as a
 `data.table`:
 
 | Function | Dataset | Format |
@@ -51,6 +51,7 @@ library(ggplot2)
 | `spi_index()` | Pillar and overall SPI scores | Wide — one row per country-year |
 | `spi_aggregates()` | Regional aggregate scores | Long — one row per region-year-indicator |
 | `spi_indicator()` | Selected named indicator columns | Wide — one row per country-year |
+| `country_info()` | Country metadata from `SPI_data.csv` | Wide — one row per country-year |
 
 ```{r datasets}
 # Individual indicator scores for all countries and years
@@ -61,6 +62,9 @@ dt_index <- spi_index()
 
 # Regional aggregate scores (regions only — countries excluded)
 dt_agg <- spi_aggregates()
+
+# Country-year metadata only
+dt_country <- country_info()
 ```
 
 Each dataset is a `data.table`. Key columns in `spi_index()`:
@@ -89,11 +93,12 @@ the `version` argument to retrieve historical data.
 
 ## Filtering Data
 
-All three functions accept the same set of filter arguments:
+The main retrieval functions share a common filter interface, with a few
+type-specific arguments:
 
 | Argument | Type | Description |
 |---|---|---|
-| `country` | Character vector of ISO3C codes | Applies to `data` and `index` |
+| `country` | Character vector of ISO3C codes | Applies to `data`, `index`, and `country_info()` |
 | `region` | Character vector of region names | Applies to `aggregates` only |
 | `year` | Integer or numeric vector | Applies to all types |
 | `pillar` | Integer 1–5 | Column filter for `data`/`index`; row filter for `aggregates` |
@@ -169,6 +174,20 @@ columns when they are available in `SPI_data.csv`.
 requested indicator columns. Use `spi_data(dimension = ...)` when you want all
 indicators in a dimension, and use `spi_indicator()` when you want a small set
 of exact indicator columns.
+
+### Country metadata with `country_info()`
+
+Use `country_info()` when you want a clean metadata lookup table rather than
+indicator values. It returns one row per country-year and keeps fields such as
+ISO codes, region, income level, lending type, and population.
+
+```{r filter-country-info}
+# Metadata for Chile in 2024
+chl_meta <- country_info(country = "CHL", year = 2024L)
+
+# Metadata for a small country set across years
+nordics_meta <- country_info(country = c("NOR", "SWE", "FIN"), year = 2022:2024)
+```
 
 ### Combining filters
 
