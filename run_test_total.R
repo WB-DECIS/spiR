@@ -35,7 +35,7 @@ print_result <- function(name, expr) {
   cat("COLUMNS:\n")
   print(names(out))
   cat("PREVIEW (first rows):\n")
-  print(utils::head(out, 5))
+  print(utils::head(out, 6))
 
   invisible(out)
 }
@@ -95,5 +95,14 @@ print_result(
     include_raw = FALSE
   )
 )
+
+print_result(
+  "country_info()",
+  country_info(
+    country = country_to_test,
+    version = version_to_test,
+    year = year_to_test
+  )
+)     
 
 cat("\nDone.\n")
