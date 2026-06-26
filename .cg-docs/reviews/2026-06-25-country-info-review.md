@@ -4,7 +4,7 @@ depth: standard
 type: standard
 plan: .cg-docs/plans/2026-06-25-country-info.md
 findings:
-  P1.1: open
+  P1.1: skipped
   P2.1: fixed
   P2.2: open
   P3.1: fixed
