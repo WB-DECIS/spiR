@@ -101,32 +101,32 @@
 <col width="38%">
 <col width="61%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Pillar</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>1</td>
 <td>
 <strong>Data Use</strong> — whether statistics are used widely and frequently</td>
 </tr>
-<tr class="even">
+<tr>
 <td>2</td>
 <td>
 <strong>Data Services</strong> — services connecting data users and producers, building trust</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>3</td>
 <td>
 <strong>Data Products</strong> — range and quality of statistical outputs, including SDG reporting</td>
 </tr>
-<tr class="even">
+<tr>
 <td>4</td>
 <td>
 <strong>Data Sources</strong> — availability of censuses, surveys, administrative, and geospatial data</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>5</td>
 <td>
 <strong>Data Infrastructure</strong> — legislation, standards, skills, partnerships, and financing</td>
@@ -190,23 +190,23 @@
 <col width="33%">
 <col width="29%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Dataset</th>
 <th>Format</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/spi_data.html">spi_data()</a></code></td>
 <td><code>SPI_data.csv</code></td>
 <td>Wide — one row per country-year, indicator columns</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/spi_index.html">spi_index()</a></code></td>
 <td><code>SPI_index.csv</code></td>
 <td>Wide — pillar and overall SPI scores per country-year</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/spi_aggregates.html">spi_aggregates()</a></code></td>
 <td><code>SPI_databank_country_and_aggregates.csv</code></td>
 <td>Long — regions only, one row per region-year-indicator</td>
@@ -224,41 +224,41 @@
 <col width="21%">
 <col width="42%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Argument</th>
 <th>Type</th>
 <th>Applies to</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>country</code></td>
 <td>Character vector of ISO 3166-1 alpha-3 codes</td>
 <td>
 <code>"data"</code>, <code>"index"</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>region</code></td>
 <td>Character vector of region names</td>
 <td><code>"aggregates"</code></td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>year</code></td>
 <td>Integer or numeric vector</td>
 <td>All types</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>pillar</code></td>
 <td>Integer 1–5</td>
 <td>All types (column filter for <code>"data"</code>/<code>"index"</code>, row filter for <code>"aggregates"</code>)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code>dimension</code></td>
 <td>Character <code>"P.D"</code> (e.g. <code>"5.2"</code>)</td>
 <td>All types; overrides <code>pillar</code>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>version</code></td>
 <td>Character branch name</td>
 <td>All types</td>
@@ -279,20 +279,20 @@
 <col width="43%">
 <col width="56%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Function</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/spi_clear_cache.html">spi_clear_cache()</a></code></td>
 <td>Clear the in-session download cache</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code><a href="reference/spi_update_inventory.html">spi_update_inventory()</a></code></td>
 <td>Refresh the local inventory of available versions from GitHub</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><code><a href="reference/spi_clear_inventory.html">spi_clear_inventory()</a></code></td>
 <td>Remove the local inventory cache (forces a fresh fetch on next call)</td>
 </tr>
