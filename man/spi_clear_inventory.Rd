@@ -32,7 +32,7 @@ spi_clear_inventory()
 \seealso{
 \code{\link[=spi_update_inventory]{spi_update_inventory()}}, \code{\link[=spi_clear_cache]{spi_clear_cache()}}
 
-Other spi-inventory-cache: 
-\code{\link{spi_update_inventory}()}
+Other spi-inventory-cache:
+\code{\link[=spi_update_inventory]{spi_update_inventory()}}
 }
 \concept{spi-inventory-cache}

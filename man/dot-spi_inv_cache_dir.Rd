@@ -10,7 +10,7 @@
 Character scalar: absolute path to the cache directory.
 }
 \description{
-Thin wrapper around \code{\link[tools:userdir]{tools::R_user_dir()}} so tests can redirect the cache
+Thin wrapper around \code{\link[tools:R_user_dir]{tools::R_user_dir()}} so tests can redirect the cache
 to a temporary directory via
 \code{local_mocked_bindings(.spi_inv_cache_dir = function() tmp)}.
 The resolved location is platform-dependent

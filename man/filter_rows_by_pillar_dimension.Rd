@@ -10,7 +10,10 @@ filter_rows_by_pillar_dimension(dt, pillar, dimension)
 \item{dt}{A \code{data.table} (long format, from
 \code{SPI_databank_country_and_aggregates.csv}).}
 
-\item{pillar}{Integer 1–5, or \code{NULL}.}
+\item{pillar}{Integer 1–5, or \code{NULL}. Matches rows where \code{source_id}
+starts with \verb{SPI.D\{pillar\}.} (individual indicators). Note: pillar-level
+summary rows (e.g. \code{SPI.INDEX.PIL1}) are \strong{not} matched by this filter;
+to retrieve those, omit \code{pillar} and filter on \code{source_id} manually.}
 
 \item{dimension}{Character string in \code{"P.D"} format, or \code{NULL}.}
 }
