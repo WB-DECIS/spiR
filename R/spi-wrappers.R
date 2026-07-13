@@ -301,3 +301,223 @@ spi_indicator <- function(indicator,
 
   dt[, keep_cols, with = FALSE]
 }
+
+
+# Normalize and validate one metadata filter argument.
+.metadata_normalize_arg <- function(value, arg_name) {
+  if (is.null(value)) return(NULL)
+
+  if (!is.character(value) || length(value) != 1L || is.na(value)) {
+    cli::cli_abort(c(
+      "{.arg {arg_name}} must be a single non-empty character string.",
+      "x" = "You supplied a {.cls {class(value)[1L]}} of length {length(value)}."
+    ))
+  }
+
+  value <- trimws(value)
+  if (!nzchar(value)) {
+    cli::cli_abort(c(
+      "{.arg {arg_name}} must be a single non-empty character string.",
+      "x" = "You supplied an empty value."
+    ))
+  }
+
+  value
+}
+
+
+#' Retrieve SPI metadata hierarchy
+#'
+#' Downloads SPI metadata and returns a standardized list with pillar,
+#' dimension, and indicator tables. Optional filters can be supplied as strings
+#' and must be hierarchically consistent.
+#'
+#' @param pillar Character scalar, e.g. `"1"`. `NULL` means no pillar filter.
+#' @param dimension Character scalar in `"P.D"` format (e.g. `"2.1"`).
+#'   `NULL` means no dimension filter.
+#' @param indicator Character scalar indicator code (e.g. `"SPI.D1.5.POV"`).
+#'   `NULL` means no indicator filter.
+#' @param version Character. Branch name in the SPI repository. Defaults to
+#'   `"master"`.
+#'
+#' @return A named list with three `data.table` elements: `pillars`,
+#'   `dimensions`, and `indicators`.
+#' @seealso [metadata_pillars()], [metadata_dimensions()], [spi_data()],
+#'   [spi_indicator()]
+#' @examples
+#' \dontrun{
+#' metadata(pillar = "1")
+#' metadata(dimension = "2.1")
+#' metadata(indicator = "SPI.D1.5.POV")
+#' }
+#' @export
+metadata <- function(pillar = NULL,
+                     dimension = NULL,
+                     indicator = NULL,
+                     version = "master") {
+  pillar <- .metadata_normalize_arg(pillar, "pillar")
+  dimension <- .metadata_normalize_arg(dimension, "dimension")
+  indicator <- .metadata_normalize_arg(indicator, "indicator")
+
+  pillar_filter <- pillar
+  dimension_filter <- dimension
+  indicator_filter <- indicator
+
+  if (!is.null(dimension_filter) &&
+      !grepl("^[0-9]+\\.[0-9]+$", dimension_filter)) {
+    cli::cli_abort(c(
+      "{.arg dimension} must be a string in {.val P.D} format.",
+      "x" = "You supplied {.val {dimension_filter}}.",
+      "i" = "Example: {.val 2.1}"
+    ))
+  }
+
+  md <- .spi_read_metadata(version = version)
+
+  valid_pillars <- sort(unique(md[["pillar"]]))
+  if (!is.null(pillar_filter) && !pillar_filter %in% valid_pillars) {
+    cli::cli_abort(c(
+      "{.arg pillar} is not available in this metadata version.",
+      "x" = "You supplied {.val {pillar_filter}}.",
+      "i" = "Valid values for version {.val {version}}: {.field {valid_pillars}}."
+    ))
+  }
+
+  if (!is.null(pillar_filter) && !is.null(dimension_filter)) {
+    dim_pillar <- sub("\\..*$", "", dimension_filter)
+    if (!identical(dim_pillar, pillar_filter)) {
+      cli::cli_abort(c(
+        "Supplied filters are hierarchically inconsistent.",
+        "x" = "Dimension {.val {dimension_filter}} belongs to pillar {.val {dim_pillar}}, not {.val {pillar_filter}}."
+      ))
+    }
+  }
+
+  indicator_rows <- NULL
+  if (!is.null(indicator_filter)) {
+    indicator_rows <- md[md[["indicator"]] == indicator_filter]
+  }
+
+  if (!is.null(pillar_filter) && !is.null(indicator_filter) &&
+      !is.null(indicator_rows) && nrow(indicator_rows) > 0L) {
+    if (!all(indicator_rows[["pillar"]] == pillar_filter)) {
+      expected <- unique(indicator_rows[["pillar"]])
+      cli::cli_abort(c(
+        "Supplied filters are hierarchically inconsistent.",
+        "x" = "Indicator {.val {indicator_filter}} belongs to pillar {.val {expected}}, not {.val {pillar_filter}}."
+      ))
+    }
+  }
+
+  if (!is.null(dimension_filter) && !is.null(indicator_filter) &&
+      !is.null(indicator_rows) && nrow(indicator_rows) > 0L) {
+    if (!all(indicator_rows[["dimension"]] == dimension_filter)) {
+      expected <- unique(indicator_rows[["dimension"]])
+      cli::cli_abort(c(
+        "Supplied filters are hierarchically inconsistent.",
+        "x" = "Indicator {.val {indicator_filter}} does not belong to dimension {.val {dimension_filter}}.",
+        "i" = "Indicator belongs to: {.field {expected}}."
+      ))
+    }
+  }
+
+  filtered <- data.table::copy(md)
+
+  if (!is.null(pillar_filter)) {
+    filtered <- filtered[filtered[["pillar"]] == pillar_filter]
+  }
+  if (!is.null(dimension_filter)) {
+    filtered <- filtered[filtered[["dimension"]] == dimension_filter]
+  }
+  if (!is.null(indicator_filter)) {
+    filtered <- filtered[filtered[["indicator"]] == indicator_filter]
+  }
+
+  pillars <- unique(filtered[, .(
+    pillar,
+    pillar_name,
+    pillar_description,
+    pillar_id
+  )])
+  if (nrow(pillars) > 0L) {
+    pillars <- pillars[order(as.integer(pillar), pillar)]
+  }
+
+  dimensions <- unique(filtered[, .(
+    pillar,
+    dimension,
+    dimension_name,
+    dimension_description,
+    dimension_id
+  )])
+  if (nrow(dimensions) > 0L) {
+    dimensions <- dimensions[order(as.integer(pillar), dimension)]
+  }
+
+  indicators <- unique(filtered[, .(
+    pillar,
+    dimension,
+    indicator,
+    indicator_name,
+    indicator_description,
+    indicator_id,
+    indicator_scoring,
+    indicator_abv
+  )])
+  if (nrow(indicators) > 0L) {
+    indicators <- indicators[order(as.integer(pillar), dimension, indicator)]
+  }
+
+  if (nrow(indicators) == 0L) {
+    cli::cli_warn(c(
+      "No metadata rows matched the supplied filters.",
+      "i" = "Version: {.val {version}}"
+    ))
+  }
+
+  return(list(
+    pillars = pillars,
+    dimensions = dimensions,
+    indicators = indicators
+  ))
+}
+
+
+#' Retrieve SPI pillar metadata
+#'
+#' Convenience wrapper that returns the pillar block from [metadata()].
+#'
+#' @param version Character. Branch name in SPI repository. Defaults to
+#'   `"master"`.
+#'
+#' @return A `data.table` with pillar-level metadata.
+#' @seealso [metadata()], [metadata_dimensions()]
+#' @examples
+#' \dontrun{
+#' metadata_pillars()
+#' }
+#' @export
+metadata_pillars <- function(version = "master") {
+  metadata(version = version)[["pillars"]]
+}
+
+
+#' Retrieve SPI dimension metadata
+#'
+#' Convenience wrapper that returns the dimension block from [metadata()].
+#'
+#' @param pillar Character scalar pillar filter (e.g. `"2"`), or `NULL`.
+#' @param version Character. Branch name in SPI repository. Defaults to
+#'   `"master"`.
+#'
+#' @return A `data.table` with dimension-level metadata.
+#' @seealso [metadata()], [metadata_pillars()]
+#' @examples
+#' \dontrun{
+#' metadata_dimensions()
+#' metadata_dimensions(pillar = "2")
+#' }
+#' @export
+metadata_dimensions <- function(pillar = NULL, version = "master") {
+  metadata(pillar = pillar, version = version)[["dimensions"]]
+}

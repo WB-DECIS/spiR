@@ -2,12 +2,16 @@
 date: 2026-07-10
 title: "SPI Metadata API"
 status: active
+failing-steps: [5]
+completed-phases: [1]
+current-phase: 2
 scope: "Standard"
 phases: 2
 brainstorm: null
 language: "R"
 estimated-effort: "medium"
 deviation-policy: "ask"
+execution-report: ".cg-docs/work-reports/2026-07-10-metadata-api.md"
 tags: [api, metadata, pillars, dimensions, indicators, wrappers]
 ---
 
