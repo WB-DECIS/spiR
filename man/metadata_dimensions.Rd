@@ -7,7 +7,9 @@
 metadata_dimensions(pillar = NULL, version = "master")
 }
 \arguments{
-\item{pillar}{Character scalar pillar filter (e.g. \code{"2"}), or \code{NULL}.}
+\item{pillar}{Character scalar pillar filter. Accepts either the canonical
+pillar value (e.g. \code{"2"}) or the SPI pillar ID (e.g.
+\code{"SPI.INDEX.PIL2"}), or \code{NULL}.}
 
 \item{version}{Character. Branch name in SPI repository. Defaults to
 \code{"master"}.}
@@ -22,6 +24,7 @@ Convenience wrapper that returns the dimension block from \code{\link[=metadata]
 \dontrun{
 metadata_dimensions()
 metadata_dimensions(pillar = "2")
+metadata_dimensions(pillar = "SPI.INDEX.PIL2")
 }
 }
 \seealso{

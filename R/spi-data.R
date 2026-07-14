@@ -77,10 +77,26 @@ SPI_REQUIRED_COLS <- c("iso3c", "date")
     ))
   }
 
-  # Normalize key columns used for filtering and hierarchy checks.
-  dt[, pillar := as.character(pillar)]
-  dt[, dimension := as.character(dimension)]
-  dt[, indicator := as.character(indicator)]
+  # Normalize key columns and preserve the canonical package-facing forms.
+  dt[, pillar := trimws(as.character(pillar))]
+  dt[, pillar_id := trimws(as.character(pillar_id))]
+  dt[, dimension := trimws(as.character(dimension))]
+  dt[, dimension_id := trimws(as.character(dimension_id))]
+  dt[, indicator := trimws(as.character(indicator))]
+  dt[, indicator_id := trimws(as.character(indicator_id))]
+
+  # Upstream stores dimension as the within-pillar sequence (e.g. "1") while
+  # the package API uses the canonical P.D form (e.g. "2.1").
+  dt[
+    !grepl("^[0-9]+\\.[0-9]+$", dimension),
+    dimension := paste0(pillar, ".", dimension)
+  ]
+
+  # Use the SPI code as the canonical indicator identifier exposed by the API.
+  dt[
+    !grepl("^SPI\\.", indicator) & nzchar(indicator_id),
+    indicator := indicator_id
+  ]
 
   return(dt)
 }

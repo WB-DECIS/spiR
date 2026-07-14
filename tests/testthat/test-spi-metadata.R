@@ -6,15 +6,15 @@ make_mock_metadata <- function() {
     pillar = c("1", "1", "2", "2", "3"),
     pillar_name = c("Data Use", "Data Use", "Data Services", "Data Services", "Data Products"),
     pillar_description = c("P1", "P1", "P2", "P2", "P3"),
-    pillar_id = c("PIL1", "PIL1", "PIL2", "PIL2", "PIL3"),
-    dimension = c("1.5", "1.5", "2.1", "2.2", "3.1"),
+    pillar_id = c("SPI.INDEX.PIL1", "SPI.INDEX.PIL1", "SPI.INDEX.PIL2", "SPI.INDEX.PIL2", "SPI.INDEX.PIL3"),
+    dimension = c("5", "5", "1", "2", "1"),
     dimension_name = c("Poverty", "Poverty", "Standards", "Methods", "Products"),
     dimension_description = c("D15", "D15", "D21", "D22", "D31"),
-    dimension_id = c("D15", "D15", "D21", "D22", "D31"),
-    indicator = c("SPI.D1.5.POV", "SPI.D1.5.CHILD_MORT", "SPI.D2.1.GDDS", "SPI.D2.2.METH", "SPI.D3.1.PROD"),
+    dimension_id = c("SPI.DIM1.5.INDEX", "SPI.DIM1.5.INDEX", "SPI.DIM2.1.INDEX", "SPI.DIM2.2.INDEX", "SPI.DIM3.1.INDEX"),
+    indicator = c("1", "2", "1", "1", "1"),
     indicator_name = c("Poverty", "Child Mortality", "GDDS", "Methods", "Products"),
     indicator_description = c("I1", "I2", "I3", "I4", "I5"),
-    indicator_id = c("I1", "I2", "I3", "I4", "I5"),
+    indicator_id = c("SPI.D1.5.POV", "SPI.D1.5.CHILD_MORT", "SPI.D2.1.GDDS", "SPI.D2.2.METH", "SPI.D3.1.PROD"),
     indicator_scoring = c("binary", "binary", "score", "score", "score"),
     indicator_abv = c("POV", "CM", "GDDS", "METH", "PROD")
   )
@@ -46,15 +46,15 @@ mock_spi_download_inconsistent_pillar_text <- function(file_path,
       pillar = "2",
       pillar_name = "Data Services",
       pillar_description = "P2 (alternate description variant)",
-      pillar_id = "PIL2",
-      dimension = "2.1",
+      pillar_id = "SPI.INDEX.PIL2",
+      dimension = "1",
       dimension_name = "Standards",
       dimension_description = "D21",
-      dimension_id = "D21",
-      indicator = "SPI.D2.1.GDDS",
+      dimension_id = "SPI.DIM2.1.INDEX",
+      indicator = "1",
       indicator_name = "GDDS",
       indicator_description = "I3",
-      indicator_id = "I3",
+      indicator_id = "SPI.D2.1.GDDS",
       indicator_scoring = "score",
       indicator_abv = "GDDS"
     )
@@ -85,7 +85,7 @@ test_that("metadata() rejects non-string input and empty values", {
 
 test_that("metadata() validates dimension format", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
-  expect_error(metadata(dimension = "abc"), "P.D")
+  expect_error(metadata(dimension = "abc"), "canonical dimension value")
 })
 
 test_that("metadata() enforces hierarchy consistency for pillar and dimension", {
@@ -121,6 +121,18 @@ test_that("metadata() filters by dimension correctly", {
   expect_equal(unique(result$pillars$pillar), "2")
 })
 
+test_that("metadata() accepts SPI pillar and dimension IDs", {
+  local_mocked_bindings(spi_download = mock_spi_download_metadata)
+  result <- metadata(
+    pillar = "SPI.INDEX.PIL2",
+    dimension = "SPI.DIM2.1.INDEX"
+  )
+
+  expect_equal(unique(result$pillars$pillar), "2")
+  expect_equal(unique(result$dimensions$dimension), "2.1")
+  expect_equal(unique(result$dimensions$dimension_id), "SPI.DIM2.1.INDEX")
+})
+
 test_that("metadata_pillars() returns pillar fields only", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
   result <- metadata_pillars()
@@ -142,6 +154,13 @@ test_that("metadata_pillars() returns one row per pillar key", {
 test_that("metadata_dimensions() filters by pillar", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
   result <- metadata_dimensions(pillar = "2")
+  expect_s3_class(result, "data.table")
+  expect_true(all(result$pillar == "2"))
+})
+
+test_that("metadata_dimensions() accepts SPI pillar IDs", {
+  local_mocked_bindings(spi_download = mock_spi_download_metadata)
+  result <- metadata_dimensions(pillar = "SPI.INDEX.PIL2")
   expect_s3_class(result, "data.table")
   expect_true(all(result$pillar == "2"))
 })

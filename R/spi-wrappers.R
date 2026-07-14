@@ -325,17 +325,69 @@ spi_indicator <- function(indicator,
 }
 
 
+# Resolve a metadata filter against either the canonical value or the SPI ID.
+.metadata_resolve_filter <- function(md,
+                                     value,
+                                     canonical_col,
+                                     id_col,
+                                     arg_name,
+                                     version,
+                                     allow_no_match = FALSE) {
+  if (is.null(value)) return(NULL)
+
+  matches <- md[
+    md[[canonical_col]] == value |
+      md[[id_col]] == value
+  ]
+
+  if (nrow(matches) == 0L) {
+    if (allow_no_match) {
+      return(value)
+    }
+
+    details <- NULL
+
+    if (arg_name == "pillar") {
+      details <- c(
+        "i" = "Accepted formats: canonical pillar (e.g. {.val 1}) or SPI pillar ID (e.g. {.val SPI.INDEX.PIL1}).",
+        "i" = "Valid canonical values: {.field {sort(unique(md[[canonical_col]]))}}."
+      )
+    }
+
+    if (arg_name == "dimension") {
+      details <- c(
+        "i" = "Accepted formats: canonical dimension (e.g. {.val 1.1}) or SPI dimension ID (e.g. {.val SPI.DIM1.1.INDEX}).",
+        "i" = "Valid canonical values include: {.field {utils::head(sort(unique(md[[canonical_col]])), 10L)}}."
+      )
+    }
+
+    cli::cli_abort(c(
+      "{.arg {arg_name}} is not available in this metadata version.",
+      "x" = "You supplied {.val {value}}.",
+      "i" = "Version: {.val {version}}.",
+      details
+    ))
+  }
+
+  unique(matches[[canonical_col]])
+}
+
+
 #' Retrieve SPI metadata hierarchy
 #'
 #' Downloads SPI metadata and returns a standardized list with pillar,
 #' dimension, and indicator tables. Optional filters can be supplied as strings
 #' and must be hierarchically consistent.
 #'
-#' @param pillar Character scalar, e.g. `"1"`. `NULL` means no pillar filter.
-#' @param dimension Character scalar in `"P.D"` format (e.g. `"2.1"`).
-#'   `NULL` means no dimension filter.
-#' @param indicator Character scalar indicator code (e.g. `"SPI.D1.5.POV"`).
-#'   `NULL` means no indicator filter.
+#' @param pillar Character scalar pillar filter. Accepts either the canonical
+#'   pillar value (e.g. `"1"`) or the SPI pillar ID (e.g.
+#'   `"SPI.INDEX.PIL1"`). `NULL` means no pillar filter.
+#' @param dimension Character scalar dimension filter. Accepts either the
+#'   canonical `"P.D"` form (e.g. `"2.1"`) or the SPI dimension ID (e.g.
+#'   `"SPI.DIM2.1.INDEX"`). `NULL` means no dimension filter.
+#' @param indicator Character scalar indicator filter. Accepts the canonical
+#'   SPI indicator code (e.g. `"SPI.D1.5.POV"`). `NULL` means no indicator
+#'   filter.
 #' @param version Character. Branch name in the SPI repository. Defaults to
 #'   `"master"`.
 #'
@@ -346,7 +398,9 @@ spi_indicator <- function(indicator,
 #' @examples
 #' \dontrun{
 #' metadata(pillar = "1")
+#' metadata(pillar = "SPI.INDEX.PIL1")
 #' metadata(dimension = "2.1")
+#' metadata(dimension = "SPI.DIM2.1.INDEX")
 #' metadata(indicator = "SPI.D1.5.POV")
 #' }
 #' @export
@@ -362,25 +416,53 @@ metadata <- function(pillar = NULL,
   dimension_filter <- dimension
   indicator_filter <- indicator
 
-  if (!is.null(dimension_filter) &&
-      !grepl("^[0-9]+\\.[0-9]+$", dimension_filter)) {
+  if (!is.null(pillar_filter) &&
+      !grepl("^[0-9]+$|^SPI\\.INDEX\\.PIL[0-9]+$", pillar_filter)) {
     cli::cli_abort(c(
-      "{.arg dimension} must be a string in {.val P.D} format.",
+      "{.arg pillar} must be a canonical pillar value or SPI pillar ID.",
+      "x" = "You supplied {.val {pillar_filter}}.",
+      "i" = "Examples: {.val 1}, {.val SPI.INDEX.PIL1}"
+    ))
+  }
+
+  if (!is.null(dimension_filter) &&
+      !grepl("^[0-9]+\\.[0-9]+$|^SPI\\.DIM[0-9]+\\.[0-9]+\\.INDEX$", dimension_filter)) {
+    cli::cli_abort(c(
+      "{.arg dimension} must be a canonical dimension value or SPI dimension ID.",
       "x" = "You supplied {.val {dimension_filter}}.",
-      "i" = "Example: {.val 2.1}"
+      "i" = "Examples: {.val 2.1}, {.val SPI.DIM2.1.INDEX}"
     ))
   }
 
   md <- .spi_read_metadata(version = version)
 
-  valid_pillars <- sort(unique(md[["pillar"]]))
-  if (!is.null(pillar_filter) && !pillar_filter %in% valid_pillars) {
-    cli::cli_abort(c(
-      "{.arg pillar} is not available in this metadata version.",
-      "x" = "You supplied {.val {pillar_filter}}.",
-      "i" = "Valid values for version {.val {version}}: {.field {valid_pillars}}."
-    ))
-  }
+  pillar_filter <- .metadata_resolve_filter(
+    md = md,
+    value = pillar_filter,
+    canonical_col = "pillar",
+    id_col = "pillar_id",
+    arg_name = "pillar",
+    version = version
+  )
+
+  dimension_filter <- .metadata_resolve_filter(
+    md = md,
+    value = dimension_filter,
+    canonical_col = "dimension",
+    id_col = "dimension_id",
+    arg_name = "dimension",
+    version = version
+  )
+
+  indicator_filter <- .metadata_resolve_filter(
+    md = md,
+    value = indicator_filter,
+    canonical_col = "indicator",
+    id_col = "indicator_id",
+    arg_name = "indicator",
+    version = version,
+    allow_no_match = TRUE
+  )
 
   if (!is.null(pillar_filter) && !is.null(dimension_filter)) {
     dim_pillar <- sub("\\..*$", "", dimension_filter)
@@ -501,7 +583,9 @@ metadata_pillars <- function(version = "master") {
 #'
 #' Convenience wrapper that returns the dimension block from [metadata()].
 #'
-#' @param pillar Character scalar pillar filter (e.g. `"2"`), or `NULL`.
+#' @param pillar Character scalar pillar filter. Accepts either the canonical
+#'   pillar value (e.g. `"2"`) or the SPI pillar ID (e.g.
+#'   `"SPI.INDEX.PIL2"`), or `NULL`.
 #' @param version Character. Branch name in SPI repository. Defaults to
 #'   `"master"`.
 #'
@@ -511,6 +595,7 @@ metadata_pillars <- function(version = "master") {
 #' \dontrun{
 #' metadata_dimensions()
 #' metadata_dimensions(pillar = "2")
+#' metadata_dimensions(pillar = "SPI.INDEX.PIL2")
 #' }
 #' @export
 metadata_dimensions <- function(pillar = NULL, version = "master") {

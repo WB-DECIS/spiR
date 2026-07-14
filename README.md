@@ -67,6 +67,8 @@ country_info(country = "CHL", year = 2024L)
 
 # --- Metadata catalog access ---
 metadata(pillar = "1")
+metadata(pillar = "SPI.INDEX.PIL1")
+metadata(dimension = "SPI.DIM1.5.INDEX")
 metadata_pillars()
 metadata_dimensions(pillar = "2")
 
@@ -113,6 +115,11 @@ objects. The other accessors return a single `data.table`.
 | `dimension` | Character `"P.D"` (e.g. `"5.2"`) | All types; overrides `pillar` |
 | `indicator` | Character vector of `SPI.D...` codes | `spi_indicator()` only |
 | `include_raw` | Logical scalar | `spi_indicator()` only; also return matching `RAW.D...` columns |
+
+For metadata accessors, `pillar` and `dimension` accept either the canonical
+package-facing values (for example `"1"` and `"1.5"`) or the SPI metadata IDs
+(`"SPI.INDEX.PIL1"`, `"SPI.DIM1.5.INDEX"`). Indicator filters accept SPI
+indicator codes such as `"SPI.D1.5.POV"`.
 | `version` | Character branch name | All types |
 
 ## Versioning

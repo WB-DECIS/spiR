@@ -159,4 +159,22 @@ print_metadata_result(
   metadata(pillar = as.character(pillar_to_test), version = version_to_test)
 )
 
+print_metadata_result(
+  "metadata(pillar='1', dimension='1.1')",
+  metadata(
+    pillar = "1",
+    dimension = "1.1",
+    version = version_to_test
+  )
+)
+
+print_metadata_result(
+  "metadata(pillar='SPI.INDEX.PIL1', dimension='SPI.DIM1.5.INDEX')",
+  metadata(
+    pillar = "SPI.INDEX.PIL1",
+    dimension = "SPI.DIM1.5.INDEX",
+    version = version_to_test
+  )
+)
+
 cat("\nDone.\n")

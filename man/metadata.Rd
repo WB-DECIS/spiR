@@ -7,13 +7,17 @@
 metadata(pillar = NULL, dimension = NULL, indicator = NULL, version = "master")
 }
 \arguments{
-\item{pillar}{Character scalar, e.g. \code{"1"}. \code{NULL} means no pillar filter.}
+\item{pillar}{Character scalar pillar filter. Accepts either the canonical
+pillar value (e.g. \code{"1"}) or the SPI pillar ID (e.g.
+\code{"SPI.INDEX.PIL1"}). \code{NULL} means no pillar filter.}
 
-\item{dimension}{Character scalar in \code{"P.D"} format (e.g. \code{"2.1"}).
-\code{NULL} means no dimension filter.}
+\item{dimension}{Character scalar dimension filter. Accepts either the
+canonical \code{"P.D"} form (e.g. \code{"2.1"}) or the SPI dimension ID (e.g.
+\code{"SPI.DIM2.1.INDEX"}). \code{NULL} means no dimension filter.}
 
-\item{indicator}{Character scalar indicator code (e.g. \code{"SPI.D1.5.POV"}).
-\code{NULL} means no indicator filter.}
+\item{indicator}{Character scalar indicator filter. Accepts the canonical
+SPI indicator code (e.g. \code{"SPI.D1.5.POV"}). \code{NULL} means no indicator
+filter.}
 
 \item{version}{Character. Branch name in the SPI repository. Defaults to
 \code{"master"}.}
@@ -30,7 +34,9 @@ and must be hierarchically consistent.
 \examples{
 \dontrun{
 metadata(pillar = "1")
+metadata(pillar = "SPI.INDEX.PIL1")
 metadata(dimension = "2.1")
+metadata(dimension = "SPI.DIM2.1.INDEX")
 metadata(indicator = "SPI.D1.5.POV")
 }
 }

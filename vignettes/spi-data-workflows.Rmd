@@ -204,8 +204,15 @@ network calls.
   # Dimensions for one pillar
   d <- metadata_dimensions(pillar = "2")
 
+  # The metadata helpers also accept SPI metadata IDs
+  d_id <- metadata_dimensions(pillar = "SPI.INDEX.PIL2")
+
   # Full associated metadata from one filter
   m <- metadata(pillar = "1")
+
+  # Dimension filters can use either the canonical P.D value or the SPI ID
+  m_dim <- metadata(dimension = "1.5")
+  m_dim_id <- metadata(dimension = "SPI.DIM1.5.INDEX")
 
   # Indicator-focused metadata lookup
   i <- metadata(indicator = "SPI.D1.5.POV")

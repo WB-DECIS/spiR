@@ -21,8 +21,8 @@ spi_get(
 country-year (wide format).
 \item \code{"index"} — \code{SPI_index.csv}: pillar and overall SPI index scores
 per country-year (wide format).
-\item \code{"aggregates"} — regional aggregate scores (long format, regions
-only — individual countries are excluded).
+\item \code{"aggregates"} — aggregate/group scores (long format, non-country
+rows only — individual countries are excluded).
 }}
 
 \item{version}{Character. Branch name in the SPI repository. Defaults to
