@@ -105,4 +105,58 @@ print_result(
   )
 )     
 
+print_metadata_result <- function(name, expr) {
+  cat("\n", paste(rep("=", 78), collapse = ""), "\n", sep = "")
+  cat("TEST:", name, "\n")
+  cat(paste(rep("-", 78), collapse = ""), "\n", sep = "")
+
+  out <- tryCatch(expr, error = function(e) e)
+
+  if (inherits(out, "error")) {
+    cat("STATUS: ERROR\n")
+    cat("MESSAGE:", conditionMessage(out), "\n")
+    return(invisible(NULL))
+  }
+
+  cat("STATUS: OK\n")
+  cat("CLASS:", paste(class(out), collapse = ", "), "\n")
+
+  if (is.list(out) && !data.table::is.data.table(out)) {
+    cat("LIST ELEMENTS:\n")
+    print(names(out))
+    for (nm in names(out)) {
+      cat("\n$", nm, "\n", sep = "")
+      if (is.data.frame(out[[nm]]) || data.table::is.data.table(out[[nm]])) {
+        cat("DIM:", paste(dim(out[[nm]]), collapse = " x "), "\n")
+        print(utils::head(out[[nm]], 6))
+      } else {
+        print(utils::head(out[[nm]], 6))
+      }
+    }
+  } else {
+    cat("DIM:", paste(dim(out), collapse = " x "), "\n")
+    cat("COLUMNS:\n")
+    print(names(out))
+    cat("PREVIEW (first rows):\n")
+    print(utils::head(out, 6))
+  }
+
+  invisible(out)
+}
+
+print_metadata_result(
+  "metadata_pillars()",
+  metadata_pillars(version = version_to_test)
+)
+
+print_metadata_result(
+  "metadata_dimensions()",
+  metadata_dimensions(version = version_to_test)
+)
+
+print_metadata_result(
+  "metadata()",
+  metadata(pillar = as.character(pillar_to_test), version = version_to_test)
+)
+
 cat("\nDone.\n")

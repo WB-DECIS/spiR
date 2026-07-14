@@ -85,3 +85,4 @@ Document the normalization in the `@param` so users know it is case-insensitive:
 
 - `R/spi-data.R` — where the fix was applied
 - `.cg-docs/solutions/data-quality/2026-04-12-na-unsafe-reorder-setorder-on-score-columns.md` — related silent-failure pattern in sort/plot operations
+- `.cg-docs/solutions/data-quality/2026-07-13-metadata-hierarchy-dedup-prevents-false-extra-pillars.md` — related pattern where unstable metadata text produced misleading output instead of a hard failure

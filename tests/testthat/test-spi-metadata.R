@@ -37,6 +37,31 @@ mock_spi_download_failure <- function(file_path, version = "master") {
   stop("404 Not Found")
 }
 
+mock_spi_download_inconsistent_pillar_text <- function(file_path,
+                                                       version = "master") {
+  dt <- make_mock_metadata()
+  dt <- rbind(
+    dt,
+    data.table::data.table(
+      pillar = "2",
+      pillar_name = "Data Services",
+      pillar_description = "P2 (alternate description variant)",
+      pillar_id = "PIL2",
+      dimension = "2.1",
+      dimension_name = "Standards",
+      dimension_description = "D21",
+      dimension_id = "D21",
+      indicator = "SPI.D2.1.GDDS",
+      indicator_name = "GDDS",
+      indicator_description = "I3",
+      indicator_id = "I3",
+      indicator_scoring = "score",
+      indicator_abv = "GDDS"
+    )
+  )
+  dt
+}
+
 test_that("metadata() is exported and returns expected structure", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
   result <- metadata(pillar = "1")
@@ -104,6 +129,14 @@ test_that("metadata_pillars() returns pillar fields only", {
     names(result),
     c("pillar", "pillar_name", "pillar_description", "pillar_id")
   )
+})
+
+test_that("metadata_pillars() returns one row per pillar key", {
+  local_mocked_bindings(spi_download = mock_spi_download_inconsistent_pillar_text)
+  result <- metadata_pillars()
+
+  expect_equal(nrow(result), length(unique(result$pillar)))
+  expect_equal(anyDuplicated(result$pillar), 0L)
 })
 
 test_that("metadata_dimensions() filters by pillar", {

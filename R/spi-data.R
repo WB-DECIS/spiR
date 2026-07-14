@@ -47,6 +47,26 @@ SPI_REQUIRED_COLS <- c("iso3c", "date")
     }
   )
 
+  # Upstream headers may include spaces/punctuation (e.g. "indicator name").
+  # Normalize to snake_case so downstream code sees stable column names.
+  old_names <- names(dt)
+  new_names <- tolower(trimws(old_names))
+  new_names <- gsub("[^a-z0-9]+", "_", new_names)
+  new_names <- gsub("_+", "_", new_names)
+  new_names <- gsub("^_|_$", "", new_names)
+
+  if (anyDuplicated(new_names)) {
+    dupes <- unique(new_names[duplicated(new_names)])
+    cli::cli_abort(c(
+      "Downloaded SPI metadata has ambiguous column names after normalization.",
+      "x" = "Duplicated normalized columns: {.field {dupes}}.",
+      "i" = "Version: {version}",
+      "i" = "Path: {SPI_METADATA_PATH}"
+    ))
+  }
+
+  data.table::setnames(dt, old = old_names, new = new_names)
+
   missing_cols <- setdiff(SPI_METADATA_REQUIRED_COLS, names(dt))
   if (length(missing_cols) > 0L) {
     cli::cli_abort(c(
@@ -82,8 +102,8 @@ SPI_REQUIRED_COLS <- c("iso3c", "date")
 #'     country-year (wide format).
 #'   * `"index"` — `SPI_index.csv`: pillar and overall SPI index scores
 #'     per country-year (wide format).
-#'   * `"aggregates"` — regional aggregate scores (long format, regions
-#'     only — individual countries are excluded).
+#'   * `"aggregates"` — aggregate/group scores (long format, non-country
+#'     rows only — individual countries are excluded).
 #' @param version Character. Branch name in the SPI repository. Defaults to
 #'   `"master"` (the latest stable version). Use [spi_versions()] to list
 #'   available branches.

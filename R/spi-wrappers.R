@@ -107,20 +107,19 @@ spi_index <- function(version = "master",
   dt[, keep_cols, with = FALSE]
 }
 
-#' Retrieve SPI regional aggregate scores
+#' Retrieve SPI aggregate/group scores
 #'
 #' A convenience wrapper around `spi_get("aggregates", ...)` that retrieves
-#' `SPI_databank_country_and_aggregates.csv` filtered to regional aggregates
+#' `SPI_databank_country_and_aggregates.csv` filtered to aggregate/group rows
 #' only (individual countries are excluded). The result is in long format
-#' with one row per region-year-indicator.
+#' with one row per aggregate-year-indicator.
 #'
 #' @inheritParams spi_get
 #' @param region Character vector of region names (e.g.
 #'   `"Africa Eastern and Southern"`). `NULL` returns all regions.
 #'
-#' @return A `data.table` in long format. Columns: `iso3c`, `country`
-#'   (region name), `date`, `source_id`, `source_name`, `N`, `N_obs`,
-#'   `value`, `footnote`.
+#' @return A `data.table` in long format. Columns: `iso3c`, `date`,
+#'   `country` (aggregate/group name), `source_id`, and `value`.
 #'
 #' @seealso [spi_data()], [spi_index()], [spi_get()], [spi_versions()]
 #'
@@ -433,37 +432,33 @@ metadata <- function(pillar = NULL,
     filtered <- filtered[filtered[["indicator"]] == indicator_filter]
   }
 
-  pillars <- unique(filtered[, .(
-    pillar,
-    pillar_name,
-    pillar_description,
-    pillar_id
-  )])
+  # Upstream metadata can include text variants for the same hierarchy key.
+  # Always collapse by key to guarantee one row per pillar.
+  pillars <- filtered[, .(
+    pillar_name = pillar_name[1L],
+    pillar_description = pillar_description[1L],
+    pillar_id = pillar_id[1L]
+  ), by = .(pillar)]
   if (nrow(pillars) > 0L) {
     pillars <- pillars[order(as.integer(pillar), pillar)]
   }
 
-  dimensions <- unique(filtered[, .(
-    pillar,
-    dimension,
-    dimension_name,
-    dimension_description,
-    dimension_id
-  )])
+  dimensions <- filtered[, .(
+    dimension_name = dimension_name[1L],
+    dimension_description = dimension_description[1L],
+    dimension_id = dimension_id[1L]
+  ), by = .(pillar, dimension)]
   if (nrow(dimensions) > 0L) {
     dimensions <- dimensions[order(as.integer(pillar), dimension)]
   }
 
-  indicators <- unique(filtered[, .(
-    pillar,
-    dimension,
-    indicator,
-    indicator_name,
-    indicator_description,
-    indicator_id,
-    indicator_scoring,
-    indicator_abv
-  )])
+  indicators <- filtered[, .(
+    indicator_name = indicator_name[1L],
+    indicator_description = indicator_description[1L],
+    indicator_id = indicator_id[1L],
+    indicator_scoring = indicator_scoring[1L],
+    indicator_abv = indicator_abv[1L]
+  ), by = .(pillar, dimension, indicator)]
   if (nrow(indicators) > 0L) {
     indicators <- indicators[order(as.integer(pillar), dimension, indicator)]
   }

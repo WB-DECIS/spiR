@@ -26,6 +26,9 @@ Each pillar is supported by multiple dimensions and indicators, aggregated into 
 datasets and country metadata wrappers, with in-session caching to avoid
 redundant downloads.
 
+`spiR` also supports metadata access workflows, so you can inspect available
+pillars, dimensions, and indicators before pulling data values.
+
 ## Installation
 
 ```r
@@ -62,6 +65,11 @@ spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS"), include_raw = TRUE)
 # --- Country-year metadata ---
 country_info(country = "CHL", year = 2024L)
 
+# --- Metadata catalog access ---
+metadata(pillar = "1")
+metadata_pillars()
+metadata_dimensions(pillar = "2")
+
 # --- Specific version (branch) ---
 spi_data(version = "SPI2023")
 
@@ -84,11 +92,15 @@ spi_clear_inventory()
 |----------|---------|--------|
 | `spi_data()` | `SPI_data.csv` | Wide — one row per country-year, all indicator columns |
 | `spi_index()` | `SPI_index.csv` | Wide — pillar and overall SPI scores per country-year |
-| `spi_aggregates()` | `SPI_databank_country_and_aggregates.csv` | Long — regions only, one row per region-year-indicator |
+| `spi_aggregates()` | `SPI_databank_country_and_aggregates.csv` | Long — aggregate/group rows only, one row per aggregate-year-indicator |
 | `spi_indicator()` | `SPI_data.csv` | Wide — selected indicator columns only (with optional raw values) |
 | `country_info()` | `SPI_data.csv` | Wide — country-year metadata columns only |
+| `metadata()` | SPI metadata catalog | List of tables — pillars, dimensions, indicators |
+| `metadata_pillars()` | SPI metadata catalog | Wide — pillar metadata only |
+| `metadata_dimensions()` | SPI metadata catalog | Wide — dimension metadata only |
 
-All functions return a [`data.table`](https://r-datatable.com/).
+`metadata()` returns a named list of [`data.table`](https://r-datatable.com/)
+objects. The other accessors return a single `data.table`.
 
 ## Filtering Arguments
 

@@ -42,14 +42,14 @@ library(ggplot2)
 
 ### The core data access functions
 
-`spiR` provides access to five main SPI data access functions, each returned as a
+`spiR` provides access to five main SPI value-access functions, each returned as a
 `data.table`:
 
 | Function | Dataset | Format |
 |---|---|---|
 | `spi_data()` | Individual indicator scores | Wide — one row per country-year |
 | `spi_index()` | Pillar and overall SPI scores | Wide — one row per country-year |
-| `spi_aggregates()` | Regional aggregate scores | Long — one row per region-year-indicator |
+| `spi_aggregates()` | Aggregate/group scores | Long — one row per aggregate-year-indicator |
 | `spi_indicator()` | Selected named indicator columns | Wide — one row per country-year |
 | `country_info()` | Country metadata from `SPI_data.csv` | Wide — one row per country-year |
 
@@ -60,7 +60,7 @@ dt_data <- spi_data()
 # Pillar-level and overall SPI index scores
 dt_index <- spi_index()
 
-# Regional aggregate scores (regions only — countries excluded)
+# Aggregate/group scores (non-country rows only)
 dt_agg <- spi_aggregates()
 
 # Country-year metadata only
@@ -187,6 +187,28 @@ chl_meta <- country_info(country = "CHL", year = 2024L)
 
 # Metadata for a small country set across years
 nordics_meta <- country_info(country = c("NOR", "SWE", "FIN"), year = 2022:2024)
+```
+
+### Metadata catalog access
+
+When you need to inspect the SPI structure (pillars, dimensions, indicators)
+before pulling values, use the metadata access functions.
+
+The examples below use `eval = FALSE` so vignette builds do not require live
+network calls.
+
+```{r metadata-access, eval=FALSE}
+  # Pillar-level metadata
+  p <- metadata_pillars()
+
+  # Dimensions for one pillar
+  d <- metadata_dimensions(pillar = "2")
+
+  # Full associated metadata from one filter
+  m <- metadata(pillar = "1")
+
+  # Indicator-focused metadata lookup
+  i <- metadata(indicator = "SPI.D1.5.POV")
 ```
 
 ### Combining filters
