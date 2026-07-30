@@ -1,23 +1,31 @@
 {
   "schemaVersion": "compound-gpid-active-state-v1",
-  "updatedAt": "2026-06-25T00:00:00Z",
+  "updatedAt": "2026-07-30T00:00:00Z",
   "workflow": "/cg-work",
-  "status": "completed",
-  "branch": null,
-  "plan": ".cg-docs/plans/2026-06-25-country-info.md",
-  "executionReport": ".cg-docs/work-reports/2026-06-25-country-info.md",
-  "currentPhase": null,
+  "status": "active",
+  "branch": "dev_visualizations",
+  "plan": ".cg-docs/plans/2026-07-30-spi-visualization-module-complete.md",
+  "executionReport": ".cg-docs/work-reports/2026-07-30-spi-visualization-module-complete.md",
+  "currentPhase": 1,
   "evidenceStatus": [
-    {"id": "V1", "status": "passed", "artifact": "R/spi-wrappers.R"},
-    {"id": "V2", "status": "passed", "artifact": "NAMESPACE; man/country_info.Rd"},
-    {"id": "V3", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V4", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V5", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V6", "status": "passed", "artifact": "testthat::test_file('tests/testthat/test-spi-wrappers.R')"}
+    {
+      "id": "V1",
+      "status": "pending",
+      "artifact": "DESCRIPTION"
+    },
+    {
+      "id": "V8",
+      "status": "pending",
+      "artifact": "devtools::test()"
+    }
   ],
   "unresolvedDecisions": [],
   "artifactRefs": [
-    {"kind": "work-report", "path": ".cg-docs/work-reports/2026-06-25-country-info.md", "status": "completed"}
+    {
+      "kind": "work-report",
+      "path": ".cg-docs/work-reports/2026-07-30-spi-visualization-module-complete.md",
+      "status": "active"
+    }
   ],
-  "nextCommand": "/cg-review standard"
+  "nextCommand": "/cg-work implement plan 2026-07-30-spi-visualization-module-complete"
 }

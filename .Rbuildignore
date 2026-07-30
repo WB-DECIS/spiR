@@ -1,7 +1,7 @@
 ^renv$
 ^renv\.lock$
-^\.cg-docs$
-^\.github$
+^\.cg-docs($|/)
+^\.github($|/)
 ^_pkgdown\.yml$
 ^check_out\.txt$
 ^check_err\.txt$
