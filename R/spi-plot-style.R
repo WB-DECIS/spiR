@@ -14,18 +14,22 @@ SPI_WB_TEXT <- "#111111"
 SPI_WB_TEXT_SUBTLE <- "#666666"
 SPI_WB_GRID <- "#EBEEF4"
 
-# WB "Basic Category Colors" (cat1..cat5) used to distinguish series.
+# WB "Basic Category Colors" (cat1..cat9) used to distinguish series.
 SPI_WB_CAT <- c(
   "#34A7F2", # cat1 blue
   "#FF9800", # cat2 orange
   "#664AB6", # cat3 purple
   "#4EC2C0", # cat4 teal
-  "#F3578E"  # cat5 pink
+  "#F3578E", # cat5 pink
+  "#081079", # cat6
+  "#0C7C68", # cat7
+  "#AA0000", # cat8
+  "#DDDA21"  # cat9
 )
 
-# WB sequential palette (light -> dark blue) for continuous fills.
+# WB sequential palette (seq1..seq5) for continuous fills.
 SPI_WB_SEQ <- c(
-  "#EAF4FC", "#B8DCF7", "#7FC0F0", "#34A7F2", "#1F72AE", "#0A3D62"
+  "#FDF6DB", "#A1CBCF", "#5D99C2", "#2868A0", "#023B6F"
 )
 
 #' Build a discrete World Bank colour vector of length `n`
@@ -49,7 +53,7 @@ SPI_WB_SEQ <- c(
 #' @return A ggplot2 scale.
 #' @keywords internal
 .spi_scale_color_wb_d <- function(...) {
-  ggplot2::scale_colour_manual(values = .spi_wb_pal_d(12L), ...)
+  ggplot2::scale_colour_manual(values = .spi_wb_pal_d(length(SPI_WB_CAT)), ...)
 }
 
 #' Discrete WB fill scale (replacement for wbplot::scale_fill_wb_d)
@@ -58,7 +62,7 @@ SPI_WB_SEQ <- c(
 #' @return A ggplot2 scale.
 #' @keywords internal
 .spi_scale_fill_wb_d <- function(...) {
-  ggplot2::scale_fill_manual(values = .spi_wb_pal_d(12L), ...)
+  ggplot2::scale_fill_manual(values = .spi_wb_pal_d(length(SPI_WB_CAT)), ...)
 }
 
 #' Continuous WB sequential fill scale (replacement for wbplot::scale_fill_wb_c)

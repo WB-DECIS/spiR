@@ -112,7 +112,20 @@ spi_plot_radar <- function(country,
   country_dt[, series := selected_label]
 
   plot_dt <- rbind(country_dt, region_dt, use.names = TRUE, fill = TRUE)
-  plot_dt[, pillar := factor(pillar, levels = pillars)]
+  pillar_short <- c(
+    "SPI.INDEX.PIL1" = "Pillar 1:\nData Use",
+    "SPI.INDEX.PIL2" = "Pillar 2:\nData Services",
+    "SPI.INDEX.PIL3" = "Pillar 3:\nData Products",
+    "SPI.INDEX.PIL4" = "Pillar 4:\nData Sources",
+    "SPI.INDEX.PIL5" = "Pillar 5:\nData Infrastructure"
+  )
+
+  plot_dt[, pillar := factor(pillar, levels = pillars, labels = pillar_short[pillars])]
+  plot_dt[, series := factor(series, levels = c(selected_label, paste0(region_name, " (aggregate)")))]
+
+  wb_country <- "#0071BC"
+  wb_reference <- "#8A969F"
+  series_levels <- c(selected_label, paste0(region_name, " (aggregate)"))
 
   ggplot2::ggplot(plot_dt, ggplot2::aes(x = pillar, y = value, group = series)) +
     ggplot2::geom_polygon(
@@ -120,19 +133,40 @@ spi_plot_radar <- function(country,
       linewidth = 1,
       alpha = 0.15
     ) +
-    ggplot2::geom_point(ggplot2::aes(color = series), size = 2) +
-    ggplot2::coord_polar() +
-    ggplot2::scale_y_continuous(limits = c(0, 100)) +
-    .spi_scale_color_wb_d() +
-    .spi_scale_fill_wb_d() +
+    ggplot2::geom_point(ggplot2::aes(color = series), size = 2.2) +
+    coord_radar() +
+    ggplot2::scale_y_continuous(
+      limits = c(0, 100),
+      breaks = c(20, 40, 60, 80, 100)
+    ) +
+    ggplot2::scale_colour_manual(
+      values = stats::setNames(c(wb_country, wb_reference), series_levels),
+      name = NULL
+    ) +
+    ggplot2::scale_fill_manual(
+      values = stats::setNames(c(wb_country, NA), series_levels),
+      name = NULL
+    ) +
+    ggplot2::scale_linetype_manual(
+      values = stats::setNames(c("solid", "dashed"), series_levels),
+      name = NULL
+    ) +
     ggplot2::labs(
-      title = paste0("SPI pillars radar | ", as.integer(year)),
+      title = "SPI Pillar Performance",
+      subtitle = paste0(selected_label, " vs. ", region_name, " regional aggregate  ·  ", as.integer(year)),
       x = NULL,
       y = NULL,
-      color = NULL,
-      fill = NULL,
-      linetype = NULL,
       caption = SPI_PLOT_CAPTION
     ) +
-    .spi_theme_wb("line")
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.grid.major = ggplot2::element_line(colour = SPI_WB_GRID),
+      axis.text.y = ggplot2::element_text(colour = SPI_WB_TEXT_SUBTLE, size = 8),
+      axis.text.x = ggplot2::element_text(colour = SPI_WB_TEXT, face = "bold"),
+      plot.title = ggplot2::element_text(face = "bold", colour = SPI_WB_TEXT),
+      plot.subtitle = ggplot2::element_text(colour = SPI_WB_TEXT_SUBTLE),
+      plot.caption = ggplot2::element_text(colour = SPI_WB_TEXT_SUBTLE),
+      legend.position = "top"
+    )
 }
