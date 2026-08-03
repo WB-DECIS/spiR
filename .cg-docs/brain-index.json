@@ -1,5 +1,5 @@
 {
-  "edge_count": 13,
+  "edge_count": 16,
   "edges": [
     {
       "edge_type": "decided_from",
@@ -18,6 +18,18 @@
       "source": ".cg-docs/plans/2026-04-12-documentation-release-milestone.md",
       "target": ".cg-docs/brainstorms/2026-04-12-documentation-release-milestone.md",
       "target_missing": false
+    },
+    {
+      "edge_type": "decided_from",
+      "source": ".cg-docs/plans/2026-07-30-spi-visualization-module-complete.md",
+      "target": ".cg-docs/brainstorms/2026-07-29-viz-ggplot-wb-guidelines-port.md",
+      "target_missing": false
+    },
+    {
+      "edge_type": "decided_from",
+      "source": ".cg-docs/plans/2026-07-30-spi-visualization-module.md",
+      "target": "2026-07-29-viz-ggplot-wb-guidelines-port",
+      "target_missing": true
     },
     {
       "edge_type": "reviews",
@@ -59,6 +71,12 @@
       "edge_type": "verifies",
       "source": ".cg-docs/reviews/2026-07-10-metadata-api-verify-review.md",
       "target": ".cg-docs/reviews/2026-07-10-metadata-api-review.md",
+      "target_missing": false
+    },
+    {
+      "edge_type": "reviews",
+      "source": ".cg-docs/reviews/2026-07-30-spi-visualization-module-complete-review.md",
+      "target": ".cg-docs/plans/2026-07-30-spi-visualization-module-complete.md",
       "target_missing": false
     },
     {
@@ -161,6 +179,71 @@
         "milestone",
         "planning",
         "_pkgdown.yml"
+      ]
+    },
+    {
+      "date": "2026-07-23",
+      "entity_type": "brainstorm",
+      "path": ".cg-docs/brainstorms/2026-07-23-visualization-functions-and-spi-map.md",
+      "slug": "2026-07-23-visualization-functions-and-spi-map",
+      "status": "superseded",
+      "summary": "> **Superseded by [2026-07-29-viz-ggplot-wb-guidelines-port.md](2026-07-29-viz-ggplot-wb-guidelines-port.md).** > The layering principle still holds, but the direction shifted from a plotly > wrapper fed by CSV to ggplot2 + wbplot functions fed by `spi_index()`/ > `spi_data()`, generalized to pillars/dimensions/indicators.",
+      "tags": [
+        "visualization",
+        "api-design",
+        "shiny",
+        "plotly",
+        "map",
+        "spi-index"
+      ],
+      "title": "Visualization architecture — reusable functions with SPI world hover map",
+      "top_keywords": [
+        "map",
+        "country",
+        "spi_index_map()",
+        "spi_vis_map_data()",
+        "spi_vis_hover_text()",
+        "spi_vis_world_map()",
+        "visualization",
+        "function",
+        "approach",
+        "spi_index()"
+      ]
+    },
+    {
+      "date": "2026-07-29",
+      "entity_type": "brainstorm",
+      "path": ".cg-docs/brainstorms/2026-07-29-viz-ggplot-wb-guidelines-port.md",
+      "slug": "2026-07-29-viz-ggplot-wb-guidelines-port",
+      "status": "decided",
+      "summary": "The visualization prototypes now live **inside this repo** under [viz_functions/](../../viz_functions), added by the author as the canonical set of charts to port into `spiR`. There are **seven** working ggplot functions (the earlier brainstorm assumed five):",
+      "tags": [
+        "visualization",
+        "ggplot2",
+        "wbplot",
+        "ggiraph",
+        "map",
+        "spi-index",
+        "country-info",
+        "pillars",
+        "dimensions",
+        "indicators",
+        "regions",
+        "population-weighting",
+        "api-design"
+      ],
+      "title": "Porting SPI_viz ggplot functions into spiR under WB style guidelines",
+      "top_keywords": [
+        "spir",
+        "country_info()",
+        "-99",
+        "na",
+        "ggplot",
+        "value_col",
+        "confirmed",
+        "wbplot",
+        "ggiraph",
+        "spi_index()"
       ]
     },
     {
@@ -331,6 +414,68 @@
       ]
     },
     {
+      "date": "2026-07-30",
+      "entity_type": "plan",
+      "path": ".cg-docs/plans/2026-07-30-spi-visualization-module-complete.md",
+      "slug": "2026-07-30-spi-visualization-module-complete",
+      "status": "active",
+      "summary": "Implementar 7 funciones publicas de visualizacion bajo el prefijo spi_plot_* en spiR, alineadas con el brainstorm aprobado, usando patrones del paquete (data.table, cli fail-loudly, cache en R_user_dir) y cobertura de pruebas unitarias.",
+      "tags": [
+        "visualization",
+        "ggplot2",
+        "wbplot",
+        "ggiraph",
+        "sf",
+        "data.table",
+        "country-info",
+        "testthat"
+      ],
+      "title": "Implementacion completa del modulo de visualizacion spi_plot_*",
+      "top_keywords": [
+        "test scenarios",
+        "visualization",
+        "phase",
+        "implement",
+        "test-spi-plot-helpers.r",
+        "functions",
+        "map",
+        "non-map",
+        "plotting",
+        "documentation"
+      ]
+    },
+    {
+      "date": "2026-07-30",
+      "entity_type": "plan",
+      "path": ".cg-docs/plans/2026-07-30-spi-visualization-module.md",
+      "slug": "2026-07-30-spi-visualization-module",
+      "status": "active",
+      "summary": "Implementar y exportar 7 funciones de visualizacion publicas bajo el prefijo spi_plot_*, alineadas con el brainstorm aprobado y con las convenciones del paquete spiR.",
+      "tags": [
+        "visualization",
+        "ggplot2",
+        "wbplot",
+        "ggiraph",
+        "sf",
+        "map",
+        "country-info",
+        "testthat"
+      ],
+      "title": "Implementacion de funciones de visualizacion spi_plot_*",
+      "top_keywords": [
+        "phase",
+        "funciones",
+        "visualizacion",
+        "implementacion",
+        "pruebas",
+        "mitigacion",
+        "dependencias",
+        "helpers",
+        "spir",
+        "compartidos"
+      ]
+    },
+    {
       "date": "",
       "entity_type": "review",
       "path": ".cg-docs/reviews/2026-04-10-milestone-1-output-data-mvp-review.md",
@@ -485,6 +630,28 @@
       ]
     },
     {
+      "date": "2026-07-30",
+      "entity_type": "review",
+      "path": ".cg-docs/reviews/2026-07-30-spi-visualization-module-complete-review.md",
+      "slug": "2026-07-30-spi-visualization-module-complete-review",
+      "status": "",
+      "summary": "**Review mode**: data-risk **Files reviewed**: 35 **Findings**: 10 (P0: 1, P1: 4, P2: 5, P3: 0)",
+      "tags": [],
+      "title": "2026-07-30-spi-visualization-module-complete-review",
+      "top_keywords": [
+        "spi-plot-map.r",
+        "test-spi-plot-geo-cache.r",
+        "fix",
+        "coord_radar()",
+        "spi_plot_radar()",
+        "pkgload::load_all()",
+        "spi-plot-region-pillars.r",
+        "spi-plot-country-vs-region.r",
+        "spi-plot-radar.r",
+        "test-spi-plot-functions.r"
+      ]
+    },
+    {
       "date": "2026-04-10",
       "entity_type": "solution",
       "path": ".cg-docs/solutions/bugs/2026-04-10-datatable-s3-dispatch-fails-without-namespace-import.md",
@@ -511,6 +678,39 @@
         "devtools::load_all()",
         "@import data.table",
         "@importfrom"
+      ]
+    },
+    {
+      "date": "2026-08-03",
+      "entity_type": "solution",
+      "path": ".cg-docs/solutions/bugs/2026-08-03-spi-visualization-module-hardening.md",
+      "slug": "2026-08-03-spi-visualization-module-hardening",
+      "status": "",
+      "summary": "The `spi_plot_*()` visualization layer worked as a prototype, but several production issues surfaced once it was exercised as a package API: - Region-based plots (`spi_plot_country_vs_region()`, `spi_plot_radar()`, `spi_plot_regions()`, `spi_plot_region_pillars()`) were conceptually tied to country-level computations, even though SPI already publishes official regional aggregates. - Chart styling depended on `wbplot`, which is not on CRAN and was broken in the local environment (`WBPALETTES`/lazy data did not load correctly). - The map path was brittle: GDAL/TLS failures, incorrect ArcGIS layer choice, and invalid `data.table :=` mutation on `sf` objects. - Tests were not fully deterministic because `spi_download()` uses an in-session cache that could...",
+      "tags": [
+        "visualization",
+        "ggplot2",
+        "sf",
+        "ggiraph",
+        "wbplot",
+        "spi-aggregates",
+        "map",
+        "radar",
+        "testthat",
+        "cache"
+      ],
+      "title": "Harden spiR visualization helpers by separating data correctness from presentation and eliminating brittle external styling",
+      "top_keywords": [
+        "wbplot",
+        "sf",
+        "world bank",
+        "helpers",
+        "visualization",
+        "official",
+        "aggregates",
+        "spi_download()",
+        "$<-",
+        ":="
       ]
     },
     {
@@ -1158,8 +1358,8 @@
       ]
     }
   ],
-  "entity_count": 43,
-  "generated": "2026-07-13",
+  "entity_count": 49,
+  "generated": "2026-08-03",
   "schema_version": "0.2.0",
   "topic_count": 4,
   "topics": [
@@ -1192,10 +1392,11 @@
       "slug": "output-data-access-raw-data-objective-release-objective"
     },
     {
-      "entity_count": 12,
+      "entity_count": 14,
       "entity_paths": [
         ".cg-docs/brainstorms/2026-04-10-milestone-1-api-design.md",
         ".cg-docs/brainstorms/2026-04-12-documentation-release-milestone.md",
+        ".cg-docs/brainstorms/2026-07-23-visualization-functions-and-spi-map.md",
         ".cg-docs/plans/2026-04-10-milestone-1-output-data-mvp.md",
         ".cg-docs/plans/2026-04-12-documentation-release-milestone.md",
         ".cg-docs/plans/2026-06-25-country-info.md",
@@ -1204,6 +1405,7 @@
         ".cg-docs/reviews/2026-06-25-country-info-review.md",
         ".cg-docs/reviews/2026-07-10-metadata-api-review.md",
         ".cg-docs/reviews/2026-07-10-metadata-api-verify-review.md",
+        ".cg-docs/reviews/2026-07-30-spi-visualization-module-complete-review.md",
         ".cg-docs/solutions/environment-issues/2026-04-11-renv-lock-ini-format-breaks-all-renv-operations.md",
         ".cg-docs/solutions/environment-issues/2026-04-12-renv-snapshot-suggests-cascade-failure.md"
       ],

@@ -1,6 +1,6 @@
 # 🧠 Project Brain — Part 1
 
-_Generated 2026-07-13_
+_Generated 2026-08-03_
 
 ## Output Data Access / Raw Data Objective / Release Objective
 
@@ -43,12 +43,14 @@ objective`_ · 16 entities
 
 ## Country / Spi_Get\(\) / Date
 
-_Keywords: `country` · `spi_get()` · `date`_ · 12 entities
+_Keywords: `country` · `spi_get()` · `date`_ · 14 entities
 
 - **[Milestone 1 API design — spi_get\(\) with convenience wrappers](.cg-docs/brainstorms/2026-04-10-milestone-1-api-design.md)** · `brainstorm` · _decided_ · `2026-04-10`
   > Milestone 1 (Output Data Access MVP) needs a clear public API for retrieving the three core SPI output files from the…
 - **[Documentation & Release — Milestone 3 planning](.cg-docs/brainstorms/2026-04-12-documentation-release-milestone.md)** · `brainstorm` · _decided_ · `2026-04-12`
   > <!-- Valid status values: decided, in-progress, abandoned -->
+- **[Visualization architecture — reusable functions with SPI world hover map](.cg-docs/brainstorms/2026-07-23-visualization-functions-and-spi-map.md)** · `brainstorm` · _superseded_ · `2026-07-23`
+  > > **Superseded by [2026-07-29-viz-ggplot-wb-guidelines-port.md](2026-07-29-viz-ggplot-wb-guidelines-port.md).** > The…
 - **[Milestone 1 — Output Data Access MVP](.cg-docs/plans/2026-04-10-milestone-1-output-data-mvp.md)** · `plan` · _active_ · `2026-04-10`
   > Implement the full Milestone 1 deliverable: users can retrieve SPI_data.csv, SPI_index.csv, and regional aggregates f…
 - **[Documentation & Release — Milestone 3 implementation](.cg-docs/plans/2026-04-12-documentation-release-milestone.md)** · `plan` · _completed_ · `2026-04-12`
@@ -65,6 +67,8 @@ _Keywords: `country` · `spi_get()` · `date`_ · 12 entities
   > **Review mode**: standard **Files reviewed**: 10 **Findings**: 9 (P0: 1, P1: 1, P2: 5, P3: 2)
 - **[2026-07-10-metadata-api-verify-review](.cg-docs/reviews/2026-07-10-metadata-api-verify-review.md)** · `review` · _—_ · `2026-07-13`
   > **Review mode**: light **Files reviewed**: 12 **Findings**: 4 (P0: 1, P1: 1, P2: 1, P3: 1)
+- **[2026-07-30-spi-visualization-module-complete-review](.cg-docs/reviews/2026-07-30-spi-visualization-module-complete-review.md)** · `review` · _—_ · `2026-07-30`
+  > **Review mode**: data-risk **Files reviewed**: 35 **Findings**: 10 (P0: 1, P1: 4, P2: 5, P3: 0)
 - **[Hand-written INI-format renv.lock blocks all renv operations](.cg-docs/solutions/environment-issues/2026-04-11-renv-lock-ini-format-breaks-all-renv-operations.md)** · `solution` · _—_ · `2026-04-11`
   > All `renv` operations (`renv::snapshot()`, `renv::init()`, `renv::restore()`) fail immediately with:
 - **[renv::snapshot\(\) cascades to hundreds of uninstalled Suggests when package.dependency.fields includes 'Suggests'](.cg-docs/solutions/environment-issues/2026-04-12-renv-snapshot-suggests-cascade-failure.md)** · `solution` · _—_ · `2026-04-12`
