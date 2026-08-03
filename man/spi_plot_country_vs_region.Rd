@@ -2,7 +2,7 @@
 % Please edit documentation in R/spi-plot-country-vs-region.R
 \name{spi_plot_country_vs_region}
 \alias{spi_plot_country_vs_region}
-\title{Plot a country against its regional average over time}
+\title{Plot a country against its official regional aggregate over time}
 \usage{
 spi_plot_country_vs_region(
   country,
@@ -11,15 +11,28 @@ spi_plot_country_vs_region(
 )
 }
 \arguments{
-\item{country}{Character scalar with country name or ISO3 code.}
+\item{country}{Character scalar with a country name or ISO3 code.}
 
-\item{value_col}{Character SPI column name.}
+\item{value_col}{Character scalar. SPI column to plot. Defaults to
+\code{"SPI.INDEX.PIL1"}.}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 }
 \value{
-A ggplot object.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 }
 \description{
-Plot a country against its regional average over time
+Plots a single SPI column over time comparing one country against its
+official regional SPI aggregate, styled with the World Bank Data
+Visualization Style Guide.
+}
+\examples{
+\dontrun{
+spi_plot_country_vs_region("Chile")
+spi_plot_country_vs_region("KEN", value_col = "SPI.INDEX")
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_trend]{spi_plot_trend()}}, \code{\link[=spi_plot_radar]{spi_plot_radar()}}, \code{\link[=spi_plot_regions]{spi_plot_regions()}}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/spi-plot-region-pillars.R
 \name{spi_plot_region_pillars}
 \alias{spi_plot_region_pillars}
-\title{Plot region pillar trajectories over time}
+\title{Plot official region pillar trajectories over time}
 \usage{
 spi_plot_region_pillars(
   region,
@@ -12,17 +12,31 @@ spi_plot_region_pillars(
 )
 }
 \arguments{
-\item{region}{Character scalar with WB region name.}
+\item{region}{Character scalar with a WB region name.}
 
-\item{weighted}{Logical. TRUE for population-weighted average.}
+\item{weighted}{Logical scalar. Must be \code{TRUE}; regional plots use the
+official SPI aggregates so they match published values exactly.}
 
-\item{pillars}{Character vector of pillar columns.}
+\item{pillars}{Character vector of pillar index columns. Defaults to the
+five SPI pillars.}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 }
 \value{
-A ggplot object.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 }
 \description{
-Plot region pillar trajectories over time
+Plots the five SPI pillar trajectories over time for one official SPI
+regional aggregate, styled with the World Bank Data Visualization Style
+Guide. Values come from the official SPI regional aggregates so they match
+published figures exactly.
+}
+\examples{
+\dontrun{
+spi_plot_region_pillars("Latin America & Caribbean")
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_regions]{spi_plot_regions()}}, \code{\link[=spi_plot_pillars]{spi_plot_pillars()}}
 }

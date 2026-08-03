@@ -9,13 +9,27 @@ spi_plot_trend(countries, value_col = "SPI.INDEX", version = "master")
 \arguments{
 \item{countries}{Character vector of country names or ISO3 codes.}
 
-\item{value_col}{Character SPI column name.}
+\item{value_col}{Character scalar. SPI column to plot (e.g.
+\code{"SPI.INDEX"}, \code{"SPI.INDEX.PIL3"}). Defaults to \code{"SPI.INDEX"}.}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 }
 \value{
-A ggplot object.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 }
 \description{
-Compare any SPI column over time across countries
+Plots a single SPI column over time with one line per country, styled
+with the World Bank Data Visualization Style Guide. Works with any SPI
+index, dimension, or indicator column.
+}
+\examples{
+\dontrun{
+spi_plot_trend(c("CHL", "PER", "COL"))
+spi_plot_trend(c("NOR", "SWE"), value_col = "SPI.INDEX.PIL3")
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_pillars]{spi_plot_pillars()}}, \code{\link[=spi_plot_country_vs_region]{spi_plot_country_vs_region()}},
+\code{\link[=spi_plot_regions]{spi_plot_regions()}}
 }

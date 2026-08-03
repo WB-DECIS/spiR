@@ -2,6 +2,14 @@
 # All tests are unit tests (no network). Network is mocked via
 # local_mocked_bindings().
 
+setup({
+  spi_clear_cache()
+})
+
+teardown({
+  spi_clear_cache()
+})
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

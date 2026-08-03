@@ -29,6 +29,20 @@ make_country_info_dt <- function() {
   )
 }
 
+make_plot_aggregate_dt <- function() {
+  data.table::data.table(
+    iso3c = c("LAC", "LAC", "LAC"),
+    date = c(2024L, 2024L, 2024L),
+    country = c(
+      "Latin America & Caribbean",
+      "Latin America & Caribbean",
+      "Latin America & Caribbean"
+    ),
+    source_id = c("SPI.INDEX", "SPI.INDEX.PIL1", "SPI.D2.1.GDDS"),
+    value = c(72.1, -99, 0.5)
+  )
+}
+
 test_that(".spi_plot_fetch() routes SPI.INDEX* to spi_index and converts -99 to NA", {
   called <- NULL
   mock_index <- function(version = "master", country = NULL, year = NULL,
@@ -80,6 +94,27 @@ test_that(".spi_plot_fetch() fails loudly when value_col is absent", {
   expect_error(
     .spi_plot_fetch("SPI.DOES.NOT.EXIST", year = 2024L),
     "not found"
+  )
+})
+
+test_that(".spi_plot_fetch_aggregates() returns normalized aggregate rows", {
+  local_mocked_bindings(
+    spi_aggregates = function(version = "master", region = NULL, year = NULL,
+                              pillar = NULL, dimension = NULL) {
+      make_plot_aggregate_dt()
+    }
+  )
+
+  result <- .spi_plot_fetch_aggregates("SPI.INDEX.PIL1", region = "Latin America & Caribbean")
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("region", "date", "source_id", "value") %in% names(result)))
+  expect_true(is.na(result$value[1]))
+})
+
+test_that(".spi_plot_fetch_aggregates() rejects RAW columns", {
+  expect_error(
+    .spi_plot_fetch_aggregates("RAW.D2.1.GDDS"),
+    "RAW columns are not available"
   )
 })
 

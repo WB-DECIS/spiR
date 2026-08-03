@@ -29,7 +29,6 @@ Suggests:
     rmarkdown (>= 2.20),
     sf (>= 1.0.0),
     testthat (>= 3.0.0),
-    wbplot (>= 0.1.0),
     withr (>= 2.5.0)
 VignetteBuilder: knitr
 Config/Needs/website: pkgdown

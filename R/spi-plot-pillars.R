@@ -2,15 +2,30 @@
 
 #' Plot SPI pillar trajectories over time for one country
 #'
-#' @param country Character scalar with country name or ISO3 code.
-#' @param pillars Character vector with pillar columns.
-#' @param version Character SPI branch.
-#' @return A ggplot object.
+#' Draws one line per SPI pillar across all available years for a single
+#' country, styled with the World Bank Data Visualization Style Guide.
+#'
+#' @param country Character scalar with a country name or ISO3 code.
+#' @param pillars Character vector of pillar index columns. Defaults to the
+#'   five SPI pillars (`SPI.INDEX.PIL1`--`SPI.INDEX.PIL5`).
+#' @param version Character. SPI branch. Defaults to `"master"`.
+#'
+#' @return A [ggplot2::ggplot] object.
+#'
+#' @seealso [spi_plot_trend()], [spi_plot_radar()],
+#'   [spi_plot_region_pillars()]
+#'
+#' @examples
+#' \dontrun{
+#' spi_plot_pillars("Chile")
+#' spi_plot_pillars("KEN", pillars = c("SPI.INDEX.PIL1", "SPI.INDEX.PIL3"))
+#' }
+#'
 #' @export
 spi_plot_pillars <- function(country,
                              pillars = paste0("SPI.INDEX.PIL", 1:5),
                              version = "master") {
-  .spi_plot_check_deps(c("ggplot2", "wbplot"))
+  .spi_plot_check_deps("ggplot2")
 
   if (!is.character(country) || length(country) != 1L || is.na(country)) {
     cli::cli_abort("{.arg country} must be a single character value.")
@@ -56,13 +71,13 @@ spi_plot_pillars <- function(country,
   ggplot2::ggplot(long, ggplot2::aes(x = date, y = value, color = pillar)) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    wbplot::scale_color_wb_d() +
+    .spi_scale_color_wb_d() +
     ggplot2::labs(
       title = paste0("SPI pillars over time: ", selected_name),
       x = NULL,
       y = "Score",
       color = NULL,
-      caption = "Source: World Bank Statistical Performance Indicators (SPI)"
+      caption = SPI_PLOT_CAPTION
     ) +
-    wbplot::theme_wb(chartType = "line")
+    .spi_theme_wb("line")
 }

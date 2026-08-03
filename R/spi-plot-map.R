@@ -137,28 +137,35 @@ SPI_PLOT_GEO_CACHE_TTL_DAYS <- 30L
     return(cached)
   }
 
-  service <- if (resolution == "medium") {
-    "WB_GAD_Medium_Resolution"
+  layer_info <- if (resolution == "medium") {
+    list(service = "WB_GAD_Medium_Resolution", layer_id = 5L)
   } else {
-    "WB_GAD_ADM0"
+    list(service = "WB_GAD_ADM0", layer_id = 0L)
   }
 
   url <- paste0(
     "https://services.arcgis.com/iQ1dY19aHwbSDYIF/arcgis/rest/services/",
-    service,
-    "/FeatureServer/0/query?where=1%3D1&outFields=*&f=geojson"
+    layer_info$service,
+    "/FeatureServer/",
+    layer_info$layer_id,
+    "/query?where=1%3D1&outFields=*&f=geojson"
   )
 
-  geo_sf <- tryCatch(
-    sf::st_read(url, quiet = TRUE),
-    error = function(e) {
-      cli::cli_abort(c(
-        "Failed to download WB boundaries and no valid local cache exists.",
-        "x" = "Caused by: {conditionMessage(e)}",
-        "i" = "Endpoint: {url}"
-      ), parent = e)
-    }
-  )
+  tmp <- tempfile(fileext = ".geojson")
+  on.exit(unlink(tmp), add = TRUE)
+
+  geo_sf <- tryCatch({
+    resp <- httr2::request(url) |>
+      httr2::req_perform()
+    writeBin(httr2::resp_body_raw(resp), tmp)
+    sf::st_read(tmp, quiet = TRUE)
+  }, error = function(e) {
+    cli::cli_abort(c(
+      "Failed to download WB boundaries and no valid local cache exists.",
+      "x" = "Caused by: {conditionMessage(e)}",
+      "i" = "Endpoint: {url}"
+    ), parent = e)
+  })
 
   geo_sf <- .spi_boundary_standardize(geo_sf)
   .spi_geo_write_cache(geo_sf, resolution)
@@ -230,15 +237,34 @@ spi_clear_geo_cache <- function(resolution = NULL) {
 
 #' Plot a world SPI choropleth for any SPI column
 #'
-#' @param value_col Character SPI column to map.
+#' Draws a world choropleth of a single SPI column for one year, styled with
+#' the World Bank Data Visualization Style Guide. Countries can be
+#' highlighted or zoomed, and the map can be returned as a static
+#' [ggplot2::ggplot] or an interactive [ggiraph::girafe] widget.
+#'
+#' @param value_col Character scalar. SPI column to map (e.g.
+#'   `"SPI.INDEX"`).
 #' @param year Integer year to display.
-#' @param country Optional ISO3 vector to highlight or zoom.
-#' @param zoom Logical. If TRUE, zoom to selected countries.
-#' @param interactive Logical. TRUE returns girafe widget; FALSE returns ggplot.
-#' @param label Optional legend/title label. Defaults to value_col.
-#' @param version Character SPI branch.
+#' @param country Optional ISO3 vector to highlight or zoom to.
+#' @param zoom Logical. If `TRUE`, zoom to the selected countries.
+#' @param interactive Logical. If `TRUE` (default) returns a
+#'   [ggiraph::girafe] widget; if `FALSE` returns a [ggplot2::ggplot].
+#' @param label Optional legend/title label. Defaults to `value_col`.
+#' @param version Character. SPI branch. Defaults to `"master"`.
 #' @param resolution Character map resolution (`"medium"` or `"high"`).
-#' @return A ggplot object (interactive = FALSE) or a girafe widget.
+#'
+#' @return A [ggplot2::ggplot] object (when `interactive = FALSE`) or a
+#'   [ggiraph::girafe] widget (when `interactive = TRUE`).
+#'
+#' @seealso [spi_plot_trend()], [spi_clear_geo_cache()]
+#'
+#' @examples
+#' \dontrun{
+#' spi_plot_map("SPI.INDEX", year = 2023)
+#' spi_plot_map("SPI.INDEX", year = 2023, country = "CHL", zoom = TRUE)
+#' spi_plot_map("SPI.INDEX", year = 2023, interactive = FALSE)
+#' }
+#'
 #' @export
 spi_plot_map <- function(value_col,
                          year,
@@ -248,7 +274,7 @@ spi_plot_map <- function(value_col,
                          label = NULL,
                          version = "master",
                          resolution = "medium") {
-  .spi_plot_check_deps(c("ggplot2", "wbplot", "sf"))
+  .spi_plot_check_deps(c("ggplot2", "sf"))
   if (isTRUE(interactive)) {
     .spi_plot_check_deps("ggiraph")
   }
@@ -286,15 +312,15 @@ spi_plot_map <- function(value_col,
     sel <- unique(toupper(trimws(country)))
   }
 
-  map_sf[, highlighted := if (is.null(sel)) TRUE else iso3 %in% sel]
-  map_sf[, value_plot := if (!is.null(sel) && !isTRUE(zoom)) {
-    data.table::fifelse(highlighted, value, NA_real_)
+  map_sf$highlighted <- if (is.null(sel)) TRUE else map_sf$iso3 %in% sel
+  map_sf$value_plot <- if (!is.null(sel) && !isTRUE(zoom)) {
+    data.table::fifelse(map_sf$highlighted, map_sf$value, NA_real_)
   } else {
-    value
-  }]
+    map_sf$value
+  }
 
   if (!is.null(sel) && isTRUE(zoom)) {
-    map_sf <- map_sf[highlighted == TRUE, ]
+    map_sf <- map_sf[map_sf$highlighted, ]
     if (nrow(map_sf) == 0L) {
       cli::cli_abort("No boundary polygons matched the requested country selection.")
     }
@@ -320,13 +346,13 @@ spi_plot_map <- function(value_col,
   }
 
   p <- p +
-    wbplot::scale_fill_wb_c(palette = "seq", na.value = "#CED4DE") +
+    .spi_scale_fill_wb_c(na.value = "#CED4DE") +
     ggplot2::labs(
       title = paste0(ttl, " | ", yr),
       fill = ttl,
-      caption = "Source: World Bank Statistical Performance Indicators (SPI)"
+      caption = SPI_PLOT_CAPTION
     ) +
-    wbplot::theme_wb(chartType = "map") +
+    .spi_theme_wb("map") +
     ggplot2::theme(
       axis.text = ggplot2::element_blank(),
       axis.ticks = ggplot2::element_blank(),

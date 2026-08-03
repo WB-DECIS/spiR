@@ -28,9 +28,39 @@ make_mock_fetch_meta_dt <- function() {
   dt
 }
 
+make_mock_aggregate_plot_dt <- function() {
+  data.table::data.table(
+    iso3c = c(
+      "LAC", "LAC", "LAC", "LAC", "LAC", "LAC", "LAC",
+      "LAC", "LAC", "LAC", "LAC", "LAC", "LAC", "LAC"
+    ),
+    date = c(
+      2023L, 2024L, 2023L, 2024L, 2023L, 2024L, 2023L,
+      2024L, 2023L, 2024L, 2023L, 2024L, 2023L, 2024L
+    ),
+    country = rep("Latin America & Caribbean", 14),
+    source_id = c(
+      "SPI.INDEX",
+      "SPI.INDEX",
+      "SPI.INDEX.PIL1",
+      "SPI.INDEX.PIL1",
+      "SPI.INDEX.PIL2",
+      "SPI.INDEX.PIL2",
+      "SPI.INDEX.PIL3",
+      "SPI.INDEX.PIL3",
+      "SPI.INDEX.PIL4",
+      "SPI.INDEX.PIL4",
+      "SPI.INDEX.PIL5",
+      "SPI.INDEX.PIL5",
+      "SPI.D1.1.TEST",
+      "SPI.D1.1.TEST"
+    ),
+    value = c(58, 60, 68, 70, 63, 65, 58, 60, 53, 55, 48, 50, 0.30, 0.33)
+  )
+}
+
 test_that("spi_plot_pillars() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
@@ -43,7 +73,6 @@ test_that("spi_plot_pillars() returns ggplot", {
 
 test_that("spi_plot_trend() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
@@ -56,11 +85,18 @@ test_that("spi_plot_trend() returns ggplot", {
 
 test_that("spi_plot_country_vs_region() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
     .spi_plot_fetch = function(...) make_mock_fetch_dt(),
+    .spi_plot_fetch_aggregates = function(...) {
+      data.table::data.table(
+        region = c("Latin America & Caribbean", "Latin America & Caribbean"),
+        date = c(2023L, 2024L),
+        source_id = c("SPI.INDEX", "SPI.INDEX"),
+        value = c(58, 60)
+      )
+    },
     .spi_plot_join_meta = function(dt, ...) {
       dt[, region := "Latin America & Caribbean"]
       dt
@@ -73,11 +109,18 @@ test_that("spi_plot_country_vs_region() returns ggplot", {
 
 test_that("spi_plot_radar() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
     spi_index = function(...) make_mock_index_plot_dt(),
+    .spi_plot_fetch_aggregates = function(...) {
+      data.table::data.table(
+        region = rep("Latin America & Caribbean", 5),
+        date = rep(2024L, 5),
+        source_id = paste0("SPI.INDEX.PIL", 1:5),
+        value = c(70, 65, 60, 55, 50)
+      )
+    },
     .spi_plot_join_meta = function(dt, ...) {
       dt[, region := "Latin America & Caribbean"]
       dt
@@ -90,14 +133,16 @@ test_that("spi_plot_radar() returns ggplot", {
 
 test_that("spi_plot_regions() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
-    .spi_plot_fetch = function(...) make_mock_fetch_dt(),
-    .spi_plot_join_meta = function(dt, ...) {
-      dt[, region := "Latin America & Caribbean"]
-      dt
+    .spi_plot_fetch_aggregates = function(...) {
+      data.table::data.table(
+        region = c("Latin America & Caribbean", "Latin America & Caribbean"),
+        date = c(2023L, 2024L),
+        source_id = c("SPI.INDEX", "SPI.INDEX"),
+        value = c(58, 60)
+      )
     }
   )
 
@@ -107,18 +152,33 @@ test_that("spi_plot_regions() returns ggplot", {
 
 test_that("spi_plot_region_pillars() returns ggplot", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
-    spi_index = function(...) make_mock_index_plot_dt(),
-    .spi_plot_join_meta = function(dt, ...) {
-      dt[, region := "Latin America & Caribbean"]
-      dt[, population := 10]
-      dt
+    .spi_plot_fetch_aggregates = function(...) {
+      data.table::data.table(
+        region = rep("Latin America & Caribbean", 10),
+        date = rep(c(2023L, 2024L), 5),
+        source_id = rep(paste0("SPI.INDEX.PIL", 1:5), each = 2),
+        value = c(68, 70, 63, 65, 58, 60, 53, 55, 48, 50)
+      )
     }
   )
 
   out <- spi_plot_region_pillars(region = "Latin America & Caribbean", weighted = TRUE)
   expect_s3_class(out, "ggplot")
+})
+
+test_that("spi_plot_region_pillars() aborts when weighted = FALSE", {
+  local_mocked_bindings(
+    .spi_plot_check_deps = function(pkgs) invisible(NULL)
+  )
+
+  expect_error(
+    spi_plot_region_pillars(
+      region = "Latin America & Caribbean",
+      weighted = FALSE
+    ),
+    "official SPI regional aggregates"
+  )
 })

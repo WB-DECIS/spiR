@@ -2,20 +2,32 @@
 % Please edit documentation in R/spi-plot-radar.R
 \name{spi_plot_radar}
 \alias{spi_plot_radar}
-\title{Radar chart of SPI pillars for one country vs region average}
+\title{Radar chart of SPI pillars for one country vs official regional aggregate}
 \usage{
 spi_plot_radar(country, year, version = "master")
 }
 \arguments{
-\item{country}{Character scalar with country name or ISO3 code.}
+\item{country}{Character scalar with a country name or ISO3 code.}
 
 \item{year}{Integer year to display.}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 }
 \value{
-A ggplot object.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 }
 \description{
-Radar chart of SPI pillars for one country vs region average
+Draws a radar (spider) chart comparing a country's five SPI pillar scores
+against its official regional SPI aggregate for a given year, styled with
+the World Bank Data Visualization Style Guide.
+}
+\examples{
+\dontrun{
+spi_plot_radar("Chile", year = 2023)
+spi_plot_radar("KEN", year = 2022)
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_pillars]{spi_plot_pillars()}}, \code{\link[=spi_plot_country_vs_region]{spi_plot_country_vs_region()}}
 }

@@ -103,6 +103,82 @@
 }
 
 
+#' Fetch official SPI aggregate rows for plotting
+#'
+#' Retrieves one or more `source_id` series from [spi_aggregates()] and
+#' normalizes them for plotting regional aggregate lines or profiles.
+#'
+#' @param value_cols Character vector of exact SPI aggregate `source_id`
+#'   values.
+#' @param version Character scalar SPI branch.
+#' @param region Optional character vector of aggregate names.
+#' @param year Optional integer/numeric year vector.
+#' @return A `data.table` with columns `region`, `date`, `source_id`, `value`.
+#' @keywords internal
+.spi_plot_fetch_aggregates <- function(value_cols,
+                                       version = "master",
+                                       region = NULL,
+                                       year = NULL) {
+  if (!is.character(value_cols) || length(value_cols) == 0L || anyNA(value_cols)) {
+    cli::cli_abort(
+      "{.arg value_cols} must be a non-empty character vector with no NA values."
+    )
+  }
+
+  value_cols <- trimws(value_cols)
+  if (any(!nzchar(value_cols))) {
+    cli::cli_abort(
+      "{.arg value_cols} must contain only non-empty SPI source identifiers."
+    )
+  }
+  if (any(grepl("^RAW\\.", value_cols))) {
+    unsupported <- value_cols[grepl("^RAW\\.", value_cols)]
+    cli::cli_abort(c(
+      "RAW columns are not available in {.fn spi_aggregates}.",
+      "x" = "Unsupported source ids: {.val {unsupported}}."
+    ))
+  }
+
+  src <- spi_aggregates(version = version, region = region, year = year)
+  if (!all(c("country", "date", "source_id", "value") %in% names(src))) {
+    cli::cli_abort(c(
+      "Aggregate source is missing required columns.",
+      "x" = "Expected columns {.field country}, {.field date}, {.field source_id}, and {.field value}."
+    ))
+  }
+
+  out <- src[source_id %in% value_cols, .(
+    region = as.character(country),
+    date = as.integer(date),
+    source_id = as.character(source_id),
+    value = suppressWarnings(as.numeric(value))
+  )]
+  out[, value := data.table::fifelse(value == -99, NA_real_, value)]
+
+  found <- unique(out[["source_id"]])
+  missing <- setdiff(value_cols, found)
+  if (length(missing) > 0L) {
+    available <- unique(as.character(src[["source_id"]]))
+    preview <- if (length(available) > 40L) available[1:40] else available
+    cli::cli_abort(c(
+      "Requested SPI aggregate series were not found.",
+      "x" = "Missing aggregate source ids: {.val {missing}}.",
+      "i" = "Available aggregate source ids include: {.val {preview}}"
+    ))
+  }
+
+  if (nrow(out) == 0L) {
+    cli::cli_abort(c(
+      "No aggregate rows available after applying plotting filters.",
+      "i" = "Check {.arg region}, {.arg year}, or {.arg value_cols}."
+    ))
+  }
+
+  data.table::setorder(out, region, source_id, date)
+  return(out)
+}
+
+
 #' Detect SPI plotting scale from observed values
 #'
 #' @param values Numeric vector.

@@ -11,15 +11,28 @@ spi_plot_pillars(
 )
 }
 \arguments{
-\item{country}{Character scalar with country name or ISO3 code.}
+\item{country}{Character scalar with a country name or ISO3 code.}
 
-\item{pillars}{Character vector with pillar columns.}
+\item{pillars}{Character vector of pillar index columns. Defaults to the
+five SPI pillars (\code{SPI.INDEX.PIL1}--\code{SPI.INDEX.PIL5}).}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 }
 \value{
-A ggplot object.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 }
 \description{
-Plot SPI pillar trajectories over time for one country
+Draws one line per SPI pillar across all available years for a single
+country, styled with the World Bank Data Visualization Style Guide.
+}
+\examples{
+\dontrun{
+spi_plot_pillars("Chile")
+spi_plot_pillars("KEN", pillars = c("SPI.INDEX.PIL1", "SPI.INDEX.PIL3"))
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_trend]{spi_plot_trend()}}, \code{\link[=spi_plot_radar]{spi_plot_radar()}},
+\code{\link[=spi_plot_region_pillars]{spi_plot_region_pillars()}}
 }

@@ -16,25 +16,42 @@ spi_plot_map(
 )
 }
 \arguments{
-\item{value_col}{Character SPI column to map.}
+\item{value_col}{Character scalar. SPI column to map (e.g.
+\code{"SPI.INDEX"}).}
 
 \item{year}{Integer year to display.}
 
-\item{country}{Optional ISO3 vector to highlight or zoom.}
+\item{country}{Optional ISO3 vector to highlight or zoom to.}
 
-\item{zoom}{Logical. If TRUE, zoom to selected countries.}
+\item{zoom}{Logical. If \code{TRUE}, zoom to the selected countries.}
 
-\item{interactive}{Logical. TRUE returns girafe widget; FALSE returns ggplot.}
+\item{interactive}{Logical. If \code{TRUE} (default) returns a
+\link[ggiraph:girafe]{ggiraph::girafe} widget; if \code{FALSE} returns a \link[ggplot2:ggplot]{ggplot2::ggplot}.}
 
-\item{label}{Optional legend/title label. Defaults to value_col.}
+\item{label}{Optional legend/title label. Defaults to \code{value_col}.}
 
-\item{version}{Character SPI branch.}
+\item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 
 \item{resolution}{Character map resolution (\code{"medium"} or \code{"high"}).}
 }
 \value{
-A ggplot object (interactive = FALSE) or a girafe widget.
+A \link[ggplot2:ggplot]{ggplot2::ggplot} object (when \code{interactive = FALSE}) or a
+\link[ggiraph:girafe]{ggiraph::girafe} widget (when \code{interactive = TRUE}).
 }
 \description{
-Plot a world SPI choropleth for any SPI column
+Draws a world choropleth of a single SPI column for one year, styled with
+the World Bank Data Visualization Style Guide. Countries can be
+highlighted or zoomed, and the map can be returned as a static
+\link[ggplot2:ggplot]{ggplot2::ggplot} or an interactive \link[ggiraph:girafe]{ggiraph::girafe} widget.
+}
+\examples{
+\dontrun{
+spi_plot_map("SPI.INDEX", year = 2023)
+spi_plot_map("SPI.INDEX", year = 2023, country = "CHL", zoom = TRUE)
+spi_plot_map("SPI.INDEX", year = 2023, interactive = FALSE)
+}
+
+}
+\seealso{
+\code{\link[=spi_plot_trend]{spi_plot_trend()}}, \code{\link[=spi_clear_geo_cache]{spi_clear_geo_cache()}}
 }

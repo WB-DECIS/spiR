@@ -1,16 +1,31 @@
 # Country vs region trend comparison.
 
-#' Plot a country against its regional average over time
+#' Plot a country against its official regional aggregate over time
 #'
-#' @param country Character scalar with country name or ISO3 code.
-#' @param value_col Character SPI column name.
-#' @param version Character SPI branch.
-#' @return A ggplot object.
+#' Plots a single SPI column over time comparing one country against its
+#' official regional SPI aggregate, styled with the World Bank Data
+#' Visualization Style Guide.
+#'
+#' @param country Character scalar with a country name or ISO3 code.
+#' @param value_col Character scalar. SPI column to plot. Defaults to
+#'   `"SPI.INDEX.PIL1"`.
+#' @param version Character. SPI branch. Defaults to `"master"`.
+#'
+#' @return A [ggplot2::ggplot] object.
+#'
+#' @seealso [spi_plot_trend()], [spi_plot_radar()], [spi_plot_regions()]
+#'
+#' @examples
+#' \dontrun{
+#' spi_plot_country_vs_region("Chile")
+#' spi_plot_country_vs_region("KEN", value_col = "SPI.INDEX")
+#' }
+#'
 #' @export
 spi_plot_country_vs_region <- function(country,
                                        value_col = "SPI.INDEX.PIL1",
                                        version = "master") {
-  .spi_plot_check_deps(c("ggplot2", "wbplot"))
+  .spi_plot_check_deps("ggplot2")
 
   if (!is.character(country) || length(country) != 1L || is.na(country)) {
     cli::cli_abort("{.arg country} must be a single character value.")
@@ -36,14 +51,17 @@ spi_plot_country_vs_region <- function(country,
     cli::cli_abort("Could not determine region for requested country.")
   }
 
-  region_avg <- dt[region == region_name, .(
-    value = mean(value, na.rm = TRUE)
-  ), by = .(date)]
-  region_avg[is.nan(value), value := NA_real_]
-  region_avg[, series := paste0(region_name, " (avg.)")]
+  region_avg <- .spi_plot_fetch_aggregates(
+    value_cols = value_col,
+    version = version,
+    region = region_name
+  )
+  region_avg <- region_avg[, .(date, value)]
+  region_avg[, series := paste0(region_name, " (aggregate)")]
 
+  selected_label <- selected_country[, unique(country_label)][1]
   selected_country <- selected_country[, .(date, value)]
-  selected_country[, series := unique(country_label)[1]]
+  selected_country[, series := selected_label]
 
   plot_dt <- rbind(selected_country, region_avg, use.names = TRUE, fill = TRUE)
   data.table::setorder(plot_dt, series, date)
@@ -53,14 +71,14 @@ spi_plot_country_vs_region <- function(country,
   ggplot2::ggplot(plot_dt, ggplot2::aes(x = date, y = value, color = series)) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    wbplot::scale_color_wb_d() +
+    .spi_scale_color_wb_d() +
     ggplot2::scale_y_continuous(limits = scale_info$limits) +
     ggplot2::labs(
       title = value_col,
       x = NULL,
       y = "Score",
       color = NULL,
-      caption = "Source: World Bank Statistical Performance Indicators (SPI)"
+      caption = SPI_PLOT_CAPTION
     ) +
-    wbplot::theme_wb(chartType = "line")
+    .spi_theme_wb("line")
 }

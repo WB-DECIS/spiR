@@ -28,7 +28,6 @@ make_mock_plot_values <- function() {
 
 test_that("spi_plot_map() returns ggplot when interactive = FALSE", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
   skip_if_not_installed("sf")
 
   local_mocked_bindings(
@@ -48,7 +47,6 @@ test_that("spi_plot_map() returns ggplot when interactive = FALSE", {
 
 test_that("spi_plot_map() returns girafe when interactive = TRUE", {
   skip_if_not_installed("ggplot2")
-  skip_if_not_installed("wbplot")
   skip_if_not_installed("sf")
   skip_if_not_installed("ggiraph")
 

@@ -1,34 +1,39 @@
 # Region-level trend comparison.
 
-#' Compare a SPI column across regions over time
+#' Compare a SPI column across official SPI regional aggregates over time
 #'
-#' @param regions Optional character vector of region names.
-#' @param value_col Character SPI column name.
-#' @param version Character SPI branch.
-#' @return A ggplot object.
+#' Plots a single SPI column over time with one line per official SPI
+#' regional aggregate, styled with the World Bank Data Visualization Style
+#' Guide.
+#'
+#' @param regions Optional character vector of region names. `NULL`
+#'   (default) plots all available regional aggregates.
+#' @param value_col Character scalar. SPI column to plot. Defaults to
+#'   `"SPI.INDEX"`.
+#' @param version Character. SPI branch. Defaults to `"master"`.
+#'
+#' @return A [ggplot2::ggplot] object.
+#'
+#' @seealso [spi_plot_trend()], [spi_plot_region_pillars()]
+#'
+#' @examples
+#' \dontrun{
+#' spi_plot_regions()
+#' spi_plot_regions(value_col = "SPI.INDEX.PIL3")
+#' }
+#'
 #' @export
 spi_plot_regions <- function(regions = NULL,
                              value_col = "SPI.INDEX",
                              version = "master") {
-  .spi_plot_check_deps(c("ggplot2", "wbplot"))
+  .spi_plot_check_deps("ggplot2")
 
-  dt <- .spi_plot_fetch(value_col = value_col, version = version)
-  dt <- .spi_plot_join_meta(dt, version = version, cols = "region")
-
-  dt <- dt[!is.na(region) & nzchar(region)]
-  if (!is.null(regions)) {
-    if (!is.character(regions) || length(regions) == 0L || anyNA(regions)) {
-      cli::cli_abort("{.arg regions} must be a non-empty character vector with no NA values.")
-    }
-    dt <- dt[region %in% regions]
-  }
-
-  if (nrow(dt) == 0L) {
-    cli::cli_abort("No rows available for requested region filters.")
-  }
-
-  region_dt <- dt[, .(value = mean(value, na.rm = TRUE)), by = .(region, date)]
-  region_dt[is.nan(value), value := NA_real_]
+  region_dt <- .spi_plot_fetch_aggregates(
+    value_cols = value_col,
+    version = version,
+    region = regions
+  )
+  region_dt <- region_dt[, .(region, date, value)]
   data.table::setorder(region_dt, region, date)
 
   scale_info <- .spi_plot_scale(region_dt$value)
@@ -39,14 +44,14 @@ spi_plot_regions <- function(regions = NULL,
   ) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    wbplot::scale_color_wb_d() +
+    .spi_scale_color_wb_d() +
     ggplot2::scale_y_continuous(limits = scale_info$limits) +
     ggplot2::labs(
       title = paste0(value_col, " by region over time"),
       x = NULL,
       y = "Score",
       color = NULL,
-      caption = "Source: World Bank Statistical Performance Indicators (SPI)"
+      caption = SPI_PLOT_CAPTION
     ) +
-    wbplot::theme_wb(chartType = "line")
+    .spi_theme_wb("line")
 }

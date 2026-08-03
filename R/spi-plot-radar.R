@@ -20,17 +20,31 @@ coord_radar <- function(theta = "x", start = 0, direction = 1) {
   )
 }
 
-#' Radar chart of SPI pillars for one country vs region average
+#' Radar chart of SPI pillars for one country vs official regional aggregate
 #'
-#' @param country Character scalar with country name or ISO3 code.
+#' Draws a radar (spider) chart comparing a country's five SPI pillar scores
+#' against its official regional SPI aggregate for a given year, styled with
+#' the World Bank Data Visualization Style Guide.
+#'
+#' @param country Character scalar with a country name or ISO3 code.
 #' @param year Integer year to display.
-#' @param version Character SPI branch.
-#' @return A ggplot object.
+#' @param version Character. SPI branch. Defaults to `"master"`.
+#'
+#' @return A [ggplot2::ggplot] object.
+#'
+#' @seealso [spi_plot_pillars()], [spi_plot_country_vs_region()]
+#'
+#' @examples
+#' \dontrun{
+#' spi_plot_radar("Chile", year = 2023)
+#' spi_plot_radar("KEN", year = 2022)
+#' }
+#'
 #' @export
 spi_plot_radar <- function(country,
                            year,
                            version = "master") {
-  .spi_plot_check_deps(c("ggplot2", "wbplot"))
+  .spi_plot_check_deps("ggplot2")
 
   if (!is.character(country) || length(country) != 1L || is.na(country)) {
     cli::cli_abort("{.arg country} must be a single character value.")
@@ -84,14 +98,18 @@ spi_plot_radar <- function(country,
     cli::cli_abort("Could not determine region for requested country.")
   }
 
-  region_dt <- long[region == region_name, .(
-    value = mean(value, na.rm = TRUE)
-  ), by = .(pillar)]
-  region_dt[is.nan(value), value := NA_real_]
-  region_dt[, series := paste0(region_name, " (avg.)")]
+  region_dt <- .spi_plot_fetch_aggregates(
+    value_cols = pillars,
+    version = version,
+    region = region_name,
+    year = as.integer(year)
+  )
+  region_dt <- region_dt[, .(pillar = source_id, value)]
+  region_dt[, series := paste0(region_name, " (aggregate)")]
 
+  selected_label <- country_dt[, unique(country_label)][1]
   country_dt <- country_dt[, .(pillar, value)]
-  country_dt[, series := unique(country_label)[1]]
+  country_dt[, series := selected_label]
 
   plot_dt <- rbind(country_dt, region_dt, use.names = TRUE, fill = TRUE)
   plot_dt[, pillar := factor(pillar, levels = pillars)]
@@ -105,8 +123,8 @@ spi_plot_radar <- function(country,
     ggplot2::geom_point(ggplot2::aes(color = series), size = 2) +
     ggplot2::coord_polar() +
     ggplot2::scale_y_continuous(limits = c(0, 100)) +
-    wbplot::scale_color_wb_d() +
-    wbplot::scale_fill_wb_d() +
+    .spi_scale_color_wb_d() +
+    .spi_scale_fill_wb_d() +
     ggplot2::labs(
       title = paste0("SPI pillars radar | ", as.integer(year)),
       x = NULL,
@@ -114,7 +132,7 @@ spi_plot_radar <- function(country,
       color = NULL,
       fill = NULL,
       linetype = NULL,
-      caption = "Source: World Bank Statistical Performance Indicators (SPI)"
+      caption = SPI_PLOT_CAPTION
     ) +
-    wbplot::theme_wb(chartType = "line")
+    .spi_theme_wb("line")
 }
