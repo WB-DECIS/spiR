@@ -24,7 +24,8 @@ coord_radar <- function(theta = "x", start = 0, direction = 1) {
 #'
 #' Draws a radar (spider) chart comparing a country's five SPI pillar scores
 #' against its official regional SPI aggregate for a given year, styled with
-#' the World Bank Data Visualization Style Guide.
+#' the World Bank Data Visualization Style Guide. Pillar axis labels are
+#' metadata-derived names.
 #'
 #' @param country Character scalar with a country name or ISO3 code.
 #' @param year Integer year to display.
@@ -112,15 +113,10 @@ spi_plot_radar <- function(country,
   country_dt[, series := selected_label]
 
   plot_dt <- rbind(country_dt, region_dt, use.names = TRUE, fill = TRUE)
-  pillar_short <- c(
-    "SPI.INDEX.PIL1" = "Pillar 1:\nData Use",
-    "SPI.INDEX.PIL2" = "Pillar 2:\nData Services",
-    "SPI.INDEX.PIL3" = "Pillar 3:\nData Products",
-    "SPI.INDEX.PIL4" = "Pillar 4:\nData Sources",
-    "SPI.INDEX.PIL5" = "Pillar 5:\nData Infrastructure"
-  )
+  pillar_labels <- .spi_plot_display_labels(pillars, version = version)
+  pillar_labels <- gsub(": ", ":\n", pillar_labels, fixed = TRUE)
 
-  plot_dt[, pillar := factor(pillar, levels = pillars, labels = pillar_short[pillars])]
+  plot_dt[, pillar := factor(pillar, levels = pillars, labels = pillar_labels[pillars])]
   plot_dt[, series := factor(series, levels = c(selected_label, paste0(region_name, " (aggregate)")))]
 
   wb_country <- "#0071BC"

@@ -4,7 +4,9 @@
 #'
 #' Plots a single SPI column over time with one line per country, styled
 #' with the World Bank Data Visualization Style Guide. Works with any SPI
-#' index, dimension, or indicator column.
+#' index, dimension, or indicator column. The chart title uses
+#' metadata-derived SPI names, and endpoint labels show ISO3 country codes
+#' for the latest non-missing observation in each series.
 #'
 #' @param countries Character vector of country names or ISO3 codes.
 #' @param value_col Character scalar. SPI column to plot (e.g.
@@ -26,7 +28,7 @@
 spi_plot_trend <- function(countries,
                            value_col = "SPI.INDEX",
                            version = "master") {
-  .spi_plot_check_deps("ggplot2")
+  .spi_plot_check_deps(c("ggplot2", "ggrepel"))
 
   if (!is.character(countries) || length(countries) == 0L || anyNA(countries)) {
     cli::cli_abort("{.arg countries} must be a non-empty character vector.")
@@ -34,6 +36,7 @@ spi_plot_trend <- function(countries,
 
   dt <- .spi_plot_fetch(value_col = value_col, version = version)
   dt[, country_label := ifelse(is.na(country), iso3c, country)]
+  dt[, country_code := iso3c]
 
   keys <- unique(trimws(countries))
   keys_upper <- toupper(keys)
@@ -57,7 +60,13 @@ spi_plot_trend <- function(countries,
     }
   }
 
-  scale_info <- .spi_plot_scale(dt$value)
+  axis_scale <- .spi_plot_scale_x_year(dt)
+  latest <- .spi_plot_latest_points(
+    dt = dt,
+    series_col = "country_label",
+    code_col = "country_code"
+  )
+  display_label <- .spi_plot_display_label(value_col = value_col, version = version)
   data.table::setorder(dt, country_label, date)
 
   ggplot2::ggplot(
@@ -66,14 +75,28 @@ spi_plot_trend <- function(countries,
   ) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
+    ggrepel::geom_text_repel(
+      data = latest,
+      ggplot2::aes(label = country_code),
+      direction = "y",
+      nudge_x = 0.25,
+      hjust = 0,
+      size = 3,
+      segment.color = SPI_WB_GRID,
+      show.legend = FALSE,
+      na.rm = TRUE,
+      max.overlaps = Inf
+    ) +
     .spi_scale_color_wb_d() +
-    ggplot2::scale_y_continuous(limits = scale_info$limits) +
+    axis_scale +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(
-      title = paste0(value_col, " over time"),
+      title = paste0(display_label, " over time"),
       x = NULL,
       y = "Score",
       color = NULL,
       caption = SPI_PLOT_CAPTION
     ) +
-    .spi_theme_wb("line")
+    .spi_theme_wb("line") +
+    ggplot2::theme(plot.margin = ggplot2::margin(5.5, 25, 5.5, 5.5))
 }
