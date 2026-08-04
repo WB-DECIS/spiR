@@ -21,7 +21,8 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Plots a single SPI column over time with one line per official SPI
 regional aggregate, styled with the World Bank Data Visualization Style
-Guide.
+Guide. The title uses metadata-derived SPI names and endpoint labels show
+regional aggregate codes.
 }
 \examples{
 \dontrun{

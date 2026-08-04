@@ -24,7 +24,8 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Plots a single SPI column over time comparing one country against its
 official regional SPI aggregate, styled with the World Bank Data
-Visualization Style Guide.
+Visualization Style Guide. The title uses metadata-derived SPI names and
+endpoint labels show the country ISO3 code and regional aggregate code.
 }
 \examples{
 \dontrun{

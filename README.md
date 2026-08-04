@@ -127,10 +127,23 @@ spi_plot_map(value_col = "SPI.INDEX", year = 2024L, interactive = FALSE)
 spi_plot_map(value_col = "SPI.INDEX", year = 2024L, interactive = TRUE)
 ```
 
-Most plotting helpers require `ggplot2`. `spi_plot_map()` also
+All plotting helpers require `ggplot2`, and time-series plotting helpers also
+require `ggrepel` for latest-value endpoint labels. `spi_plot_map()` also
 requires `sf`, and interactive maps additionally require `ggiraph`. The World
 Bank Data Visualization Style Guide styling is built into the package, so no
 external styling package is needed.
+
+Time-series helpers (`spi_plot_pillars()`, `spi_plot_trend()`,
+`spi_plot_country_vs_region()`, `spi_plot_regions()`, and
+`spi_plot_region_pillars()`) now:
+
+- start the x-axis at the previous five-year interval that contains the first
+	non-missing observation;
+- keep enough right-side x-scale space so the final year tick is fully visible;
+- label only the latest non-missing value in each series (ISO3 for countries,
+	aggregate codes for regions, and SPI source codes for SPI series);
+- use metadata-derived SPI names in titles and legends (for example,
+	`SPI.INDEX` as "SPI Index" and `SPI.INDEX.PIL1` as "Pillar 1: Data Use").
 
 ## Data Types
 

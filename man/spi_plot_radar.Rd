@@ -19,7 +19,8 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Draws a radar (spider) chart comparing a country's five SPI pillar scores
 against its official regional SPI aggregate for a given year, styled with
-the World Bank Data Visualization Style Guide.
+the World Bank Data Visualization Style Guide. Pillar axis labels are
+metadata-derived names.
 }
 \examples{
 \dontrun{
