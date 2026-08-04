@@ -18,7 +18,8 @@ utils::globalVariables(c(
   # data.table / ggplot2 column symbols used in NSE expressions
   "value", "value_plot", "pillar", "date", "country", "country_label",
   "iso3c", "iso3", "source_id", "region", "series", "highlighted",
-  "hover_text", "dimension", "category",
+  "hover_text", "dimension", "category", ".N", "..key_cols",
+  "country_code", "pillar_code", "pillar_label", "region_code", "series_code",
   # metadata column symbols
   "pillar_id", "pillar_name", "pillar_description",
   "dimension_id", "dimension_name", "dimension_description",

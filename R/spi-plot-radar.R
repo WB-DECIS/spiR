@@ -149,7 +149,7 @@ spi_plot_radar <- function(country,
     ) +
     ggplot2::labs(
       title = "SPI Pillar Performance",
-      subtitle = paste0(selected_label, " vs. ", region_name, " regional aggregate  ·  ", as.integer(year)),
+      subtitle = paste0(selected_label, " vs. ", region_name, " regional aggregate - ", as.integer(year)),
       x = NULL,
       y = NULL,
       caption = SPI_PLOT_CAPTION

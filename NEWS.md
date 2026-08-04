@@ -1,5 +1,9 @@
-# spiR 0.1.0.9000 (development)
+# spiR 0.2.0 (2026-08-04)
 
+* Added metadata catalog access through `metadata()`, `metadata_pillars()`,
+  `metadata_dimensions()`, and `metadata_indicators()`.
+* Added `spi_indicator()` for selecting named indicators and `country_info()`
+  for retrieving country-year metadata.
 * Added visualization helpers: `spi_plot_pillars()`, `spi_plot_trend()`,
   `spi_plot_country_vs_region()`, `spi_plot_radar()`, `spi_plot_regions()`,
   `spi_plot_region_pillars()`, and `spi_plot_map()` (static `ggplot` or
