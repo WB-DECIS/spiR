@@ -62,6 +62,13 @@ mock_spi_download_inconsistent_pillar_text <- function(file_path,
   dt
 }
 
+mock_spi_download_duplicate_pillar_row <- function(file_path,
+                                                   version = "master") {
+  dt <- make_mock_metadata()
+  duplicate_row <- dt[dt$pillar == "2" & dt$dimension == "1"][1L]
+  rbind(dt, duplicate_row)
+}
+
 mock_spi_download_empty_indicator_keys <- function(file_path,
                                                     version = "master") {
   dt <- make_mock_metadata()
@@ -171,7 +178,7 @@ test_that("metadata_pillars() returns pillar fields only", {
 })
 
 test_that("metadata_pillars() returns one row per pillar key", {
-  local_mocked_bindings(spi_download = mock_spi_download_inconsistent_pillar_text)
+  local_mocked_bindings(spi_download = mock_spi_download_duplicate_pillar_row)
   result <- metadata_pillars()
 
   expect_equal(nrow(result), length(unique(result$pillar)))
@@ -180,7 +187,10 @@ test_that("metadata_pillars() returns one row per pillar key", {
 
 test_that("metadata() does not return placeholder indicators", {
   local_mocked_bindings(spi_download = mock_spi_download_empty_indicator_keys)
-  result <- metadata()
+  expect_warning(
+    result <- metadata(),
+    "No metadata rows matched"
+  )
 
   expect_false(anyNA(result$indicators$indicator))
   expect_equal(nrow(result$indicators), 0L)
