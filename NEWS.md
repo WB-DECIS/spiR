@@ -1,3 +1,17 @@
+# spiR 0.1.0.9000 (development)
+
+* Added visualization helpers: `spi_plot_pillars()`, `spi_plot_trend()`,
+  `spi_plot_country_vs_region()`, `spi_plot_radar()`, `spi_plot_regions()`,
+  `spi_plot_region_pillars()`, and `spi_plot_map()` (static `ggplot` or
+  interactive `ggiraph` choropleth).
+* Region-based plots now use the official SPI regional aggregates from
+  `spi_aggregates()`, so they match published values exactly.
+* World Bank Data Visualization Style Guide styling (colours + theme) is now
+  built into the package. The plot helpers no longer depend on the external,
+  non-CRAN `wbplot` package; they only require `ggplot2` (plus `sf`/`ggiraph`
+  for maps).
+* `spi_clear_geo_cache()`: clear cached map boundary geometries.
+
 # spiR 0.1.0 (2026-04-12)
 
 * First stable release.

@@ -88,6 +88,63 @@ spi_update_inventory()
 spi_clear_inventory()
 ```
 
+## Visualization Helpers
+
+`spiR` includes high-level plotting helpers for the most common SPI
+comparison workflows. These functions fetch the needed SPI data, reshape it,
+and return ready-to-use `ggplot2` objects. The map helper can also return an
+interactive widget.
+
+| Function | Purpose | Output |
+|----------|---------|--------|
+| `spi_plot_pillars()` | Plot the five SPI pillars over time for one country | `ggplot` |
+| `spi_plot_trend()` | Compare one SPI series across multiple countries over time | `ggplot` |
+| `spi_plot_country_vs_region()` | Compare one country against its official regional aggregate | `ggplot` |
+| `spi_plot_radar()` | Show one country's pillar profile versus its region in one year | `ggplot` |
+| `spi_plot_regions()` | Compare one SPI series across regions over time | `ggplot` |
+| `spi_plot_region_pillars()` | Plot pillar trends for one region using official SPI aggregates | `ggplot` |
+| `spi_plot_map()` | Draw a world choropleth for any SPI column | `ggplot` or `girafe` |
+
+```r
+# Country pillar trajectories
+spi_plot_pillars(country = "CHL")
+
+# Multi-country trend comparison
+spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
+
+# Country versus regional average
+spi_plot_country_vs_region(country = "CHL", value_col = "SPI.INDEX.PIL1")
+
+# Country radar profile for one year
+spi_plot_radar(country = "CHL", year = 2024L)
+
+# Region comparisons
+spi_plot_regions(value_col = "SPI.INDEX")
+spi_plot_region_pillars(region = "Latin America & Caribbean")
+
+# Static or interactive maps
+spi_plot_map(value_col = "SPI.INDEX", year = 2024L, interactive = FALSE)
+spi_plot_map(value_col = "SPI.INDEX", year = 2024L, interactive = TRUE)
+```
+
+All plotting helpers require `ggplot2`, and time-series plotting helpers also
+require `ggrepel` for latest-value endpoint labels. `spi_plot_map()` also
+requires `sf`, and interactive maps additionally require `ggiraph`. The World
+Bank Data Visualization Style Guide styling is built into the package, so no
+external styling package is needed.
+
+Time-series helpers (`spi_plot_pillars()`, `spi_plot_trend()`,
+`spi_plot_country_vs_region()`, `spi_plot_regions()`, and
+`spi_plot_region_pillars()`) now:
+
+- start the x-axis at the previous five-year interval that contains the first
+	non-missing observation;
+- keep enough right-side x-scale space so the final year tick is fully visible;
+- label only the latest non-missing value in each series (ISO3 for countries,
+	aggregate codes for regions, and SPI source codes for SPI series);
+- use metadata-derived SPI names in titles and legends (for example,
+	`SPI.INDEX` as "SPI Index" and `SPI.INDEX.PIL1` as "Pillar 1: Data Use").
+
 ## Data Types
 
 | Function | Dataset | Format |

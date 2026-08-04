@@ -19,13 +19,16 @@ Depends:
 Imports:
     cli (>= 3.0.0),
     data.table (>= 1.14.0),
+    ggrepel (>= 0.9.5),
+    ggplot2 (>= 3.4.0),
     httr2 (>= 1.0.0),
     tools,
     utils
 Suggests:
-    ggplot2 (>= 3.4.0),
+    ggiraph (>= 0.9.2),
     knitr (>= 1.40),
     rmarkdown (>= 2.20),
+    sf (>= 1.0.0),
     testthat (>= 3.0.0),
     withr (>= 2.5.0)
 VignetteBuilder: knitr

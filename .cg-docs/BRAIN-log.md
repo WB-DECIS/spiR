@@ -1,6 +1,6 @@
 # 🧠 Project Brain — Chronological Log
 
-_Generated 2026-07-13 · 27 artifacts (newest first) + 16 roadmap features_
+_Generated 2026-08-03 · 33 artifacts (newest first) + 16 roadmap features_
 
 ## undated
 
@@ -12,6 +12,30 @@ _Generated 2026-07-13 · 27 artifacts (newest first) + 16 roadmap features_
   > **Changed files reviewed:** - `.gitignore` (modified) - `DESCRIPTION` (modified — version 0.1.0, 4 new Suggests) - `N…
 - **[2026-04-12-inventory-cache-system-review](.cg-docs/reviews/2026-04-12-inventory-cache-system-review.md)** · `review` · _—_ · `—`
   > **Review depth**: standard **Files reviewed**: 4 (`R/spi-inventory-cache.R`, `R/spi-filters.R`, `R/spi-github.R`, `te…
+
+## 2026-08-03
+
+- **[Harden spiR visualization helpers by separating data correctness from presentation and eliminating brittle external styling](.cg-docs/solutions/bugs/2026-08-03-spi-visualization-module-hardening.md)** · `solution` · _—_ · `2026-08-03`
+  > The `spi_plot_*()` visualization layer worked as a prototype, but several production issues surfaced once it was exer…
+
+## 2026-07-30
+
+- **[2026-07-30-spi-visualization-module-complete-review](.cg-docs/reviews/2026-07-30-spi-visualization-module-complete-review.md)** · `review` · _—_ · `2026-07-30`
+  > **Review mode**: data-risk **Files reviewed**: 35 **Findings**: 10 (P0: 1, P1: 4, P2: 5, P3: 0)
+- **[Implementacion completa del modulo de visualizacion spi_plot_*](.cg-docs/plans/2026-07-30-spi-visualization-module-complete.md)** · `plan` · _active_ · `2026-07-30`
+  > Implementar 7 funciones publicas de visualizacion bajo el prefijo spi_plot_* en spiR, alineadas con el brainstorm apr…
+- **[Implementacion de funciones de visualizacion spi_plot_*](.cg-docs/plans/2026-07-30-spi-visualization-module.md)** · `plan` · _active_ · `2026-07-30`
+  > Implementar y exportar 7 funciones de visualizacion publicas bajo el prefijo spi_plot_*, alineadas con el brainstorm …
+
+## 2026-07-29
+
+- **[Porting SPI_viz ggplot functions into spiR under WB style guidelines](.cg-docs/brainstorms/2026-07-29-viz-ggplot-wb-guidelines-port.md)** · `brainstorm` · _decided_ · `2026-07-29`
+  > The visualization prototypes now live **inside this repo** under [viz_functions/](../../viz_functions), added by the …
+
+## 2026-07-23
+
+- **[Visualization architecture — reusable functions with SPI world hover map](.cg-docs/brainstorms/2026-07-23-visualization-functions-and-spi-map.md)** · `brainstorm` · _superseded_ · `2026-07-23`
+  > > **Superseded by [2026-07-29-viz-ggplot-wb-guidelines-port.md](2026-07-29-viz-ggplot-wb-guidelines-port.md).** > The…
 
 ## 2026-07-13
 

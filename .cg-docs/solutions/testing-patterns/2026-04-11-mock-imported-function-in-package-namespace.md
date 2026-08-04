@@ -85,4 +85,5 @@ dt <- data.table::fread(tmp, ...)
 ## Related
 
 - [2026-04-10-datatable-s3-dispatch-fails-without-namespace-import.md](../bugs/2026-04-10-datatable-s3-dispatch-fails-without-namespace-import.md) — related namespace import issue
+- [2026-08-03-spi-visualization-module-hardening.md](../bugs/2026-08-03-spi-visualization-module-hardening.md) — visualization module example where cache isolation and namespace-aware mocks kept plotting tests deterministic
 - testthat docs: `?testthat::local_mocked_bindings`

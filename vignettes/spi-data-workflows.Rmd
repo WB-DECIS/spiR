@@ -332,6 +332,67 @@ bottom10 <- tail(latest_year, 10)
 
 The examples below use `ggplot2`.
 
+### Built-in visualization helpers
+
+`spiR` includes ready-to-use plotting wrappers for the most common SPI
+visualization tasks. These helpers download the required SPI data, reshape it
+internally, and return plots styled with the built-in World Bank Data
+Visualization Style Guide theme.
+
+The examples below are shown but not evaluated during vignette builds, which
+matches the existing convention for code that would otherwise require live
+network access.
+
+| Function | Purpose | Output |
+|---|---|---|
+| `spi_plot_pillars()` | Plot the five SPI pillars over time for one country | `ggplot` |
+| `spi_plot_trend()` | Compare one SPI series across countries over time | `ggplot` |
+| `spi_plot_country_vs_region()` | Compare one country against its official regional aggregate | `ggplot` |
+| `spi_plot_radar()` | Show one country's pillar profile versus its region in one year | `ggplot` |
+| `spi_plot_regions()` | Compare one SPI series across regions over time | `ggplot` |
+| `spi_plot_region_pillars()` | Plot pillar trends for one region using official SPI aggregates | `ggplot` |
+| `spi_plot_map()` | Draw a world SPI choropleth | `ggplot` or `girafe` |
+
+```{r built-in-plots, eval=FALSE}
+# Pillar trajectories for one country
+spi_plot_pillars(country = "CHL")
+
+# Compare overall SPI across countries over time
+spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
+
+# Country versus regional average
+spi_plot_country_vs_region(
+  country = "CHL",
+  value_col = "SPI.INDEX.PIL1"
+)
+
+# Radar profile for one year
+spi_plot_radar(country = "CHL", year = 2024L)
+
+# Region-level comparisons
+spi_plot_regions(value_col = "SPI.INDEX")
+spi_plot_region_pillars(region = "Latin America & Caribbean")
+
+# Static and interactive map outputs
+spi_plot_map(
+  value_col = "SPI.INDEX",
+  year = 2024L,
+  interactive = FALSE
+)
+
+spi_plot_map(
+  value_col = "SPI.INDEX",
+  year = 2024L,
+  interactive = TRUE
+)
+```
+
+Most plotting helpers require `ggplot2`. `spi_plot_map()` also
+requires `sf`, and interactive maps additionally require `ggiraph`. The World
+Bank styling is built into the package.
+
+### Custom ggplot workflows
+
 ### Overall SPI score by country (bar chart)
 
 ```{r plot-bar}
