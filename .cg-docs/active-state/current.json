@@ -44,7 +44,6 @@
       "artifact": "devtools::check(args = \"--no-manual\") blocked by missing Pandoc"
     }
   ],
-  "unresolvedDecisions": [],
   "artifactRefs": [
     {
       "kind": "plan",
@@ -57,5 +56,5 @@
       "status": "completed"
     }
   ],
-  "nextCommand": "/cg-review standard"
+  "nextCommand": "/cg-work review:manual"
 }
