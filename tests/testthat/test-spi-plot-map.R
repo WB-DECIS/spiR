@@ -45,6 +45,27 @@ test_that("spi_plot_map() returns ggplot when interactive = FALSE", {
   expect_s3_class(out, "ggplot")
 })
 
+test_that("spi_plot_map() uses metadata display label in default title", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("sf")
+
+  local_mocked_bindings(
+    .spi_plot_check_deps = function(pkgs) invisible(NULL),
+    .spi_plot_fetch = function(...) make_mock_plot_values(),
+    .spi_fetch_boundaries = function(resolution = "medium") make_mock_boundaries_sf(),
+    .spi_plot_display_label = function(value_col, version = "master") "SPI Index"
+  )
+
+  out <- spi_plot_map(
+    value_col = "SPI.INDEX",
+    year = 2024L,
+    interactive = FALSE
+  )
+
+  expect_equal(out$labels$title, "SPI Index | 2024")
+  expect_equal(out$labels$fill, "SPI Index")
+})
+
 test_that("spi_plot_map() returns girafe when interactive = TRUE", {
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("sf")
