@@ -167,3 +167,82 @@ test_that(".spi_plot_join_meta() aborts when required metadata columns are missi
     "Missing metadata"
   )
 })
+
+test_that(".spi_plot_floor_year_to_five() rounds down to previous five-year mark", {
+  expect_equal(.spi_plot_floor_year_to_five(2016L), 2015L)
+  expect_equal(.spi_plot_floor_year_to_five(2015L), 2015L)
+  expect_equal(.spi_plot_floor_year_to_five(2000L), 2000L)
+})
+
+test_that(".spi_plot_time_axis_spec() starts from first non-missing value year", {
+  dt <- data.table::data.table(
+    date = c(2005L, 2006L, 2016L, 2017L, 2025L),
+    value = c(NA_real_, NA_real_, 55, 58, 63)
+  )
+
+  spec <- .spi_plot_time_axis_spec(dt)
+
+  expect_equal(spec$start_year, 2015L)
+  expect_equal(spec$end_year, 2025L)
+  expect_true(spec$limits[2] > 2025)
+  expect_true(2015L %in% spec$breaks)
+  expect_true(2025L %in% spec$breaks)
+})
+
+test_that(".spi_plot_latest_points() keeps latest non-missing observation per series", {
+  dt <- data.table::data.table(
+    series = c("A", "A", "A", "B", "B", "C", "C"),
+    date = c(2022L, 2023L, 2024L, 2023L, 2024L, 2022L, 2023L),
+    value = c(1, NA_real_, 3, 2, NA_real_, NA_real_, NA_real_),
+    code = c("A", "A", "A", "B", "B", "C", "C")
+  )
+
+  latest <- .spi_plot_latest_points(
+    dt = dt,
+    series_col = "series",
+    code_col = "code"
+  )
+
+  expect_equal(nrow(latest), 2L)
+  expect_setequal(latest$series, c("A", "B"))
+  expect_equal(latest[series == "A"]$date, 2024L)
+  expect_equal(latest[series == "B"]$date, 2023L)
+})
+
+test_that(".spi_plot_display_label() resolves metadata names by stable IDs", {
+  local_mocked_bindings(
+    metadata = function(version = "master", ...) {
+      list(
+        pillars = data.table::data.table(
+          pillar = c("1", "2"),
+          pillar_name = c("Pillar 1: Data Use", "Data Services"),
+          pillar_id = c("SPI.INDEX.PIL1", "SPI.INDEX.PIL2")
+        ),
+        dimensions = data.table::data.table(
+          pillar = c("2"),
+          dimension = c("2.1"),
+          dimension_name = c("Dimension 2.1: Use of Administrative Data"),
+          dimension_id = c("SPI.DIM2.1.INDEX")
+        ),
+        indicators = data.table::data.table(
+          pillar = c("2"),
+          dimension = c("2.1"),
+          indicator = c("2.1.1"),
+          indicator_name = c("Has GDDS metadata"),
+          indicator_id = c("SPI.D2.1.GDDS")
+        )
+      )
+    }
+  )
+
+  expect_equal(.spi_plot_display_label("SPI.INDEX"), "SPI Index")
+  expect_equal(.spi_plot_display_label("SPI.INDEX.PIL1"), "Pillar 1: Data Use")
+  expect_equal(
+    .spi_plot_display_label("SPI.DIM2.1.INDEX"),
+    "Dimension 2.1: Use of Administrative Data"
+  )
+  expect_equal(
+    .spi_plot_display_label("SPI.D2.1.GDDS"),
+    "Indicator SPI.D2.1.GDDS: Has GDDS metadata"
+  )
+})
