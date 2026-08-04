@@ -1,23 +1,38 @@
 {
   "schemaVersion": "compound-gpid-active-state-v1",
-  "updatedAt": "2026-06-25T00:00:00Z",
+  "updatedAt": "2026-08-04T12:00:00Z",
   "workflow": "/cg-work",
-  "status": "completed",
-  "branch": null,
-  "plan": ".cg-docs/plans/2026-06-25-country-info.md",
-  "executionReport": ".cg-docs/work-reports/2026-06-25-country-info.md",
+  "status": "blocked",
+  "branch": "dev_metadata",
+  "plan": ".cg-docs/plans/2026-08-04-metadata-api-review-follow-up.md",
+  "executionReport": ".cg-docs/work-reports/2026-08-04-metadata-api-review-follow-up.md",
   "currentPhase": null,
   "evidenceStatus": [
-    {"id": "V1", "status": "passed", "artifact": "R/spi-wrappers.R"},
-    {"id": "V2", "status": "passed", "artifact": "NAMESPACE; man/country_info.Rd"},
-    {"id": "V3", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V4", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V5", "status": "passed", "artifact": "tests/testthat/test-spi-wrappers.R"},
-    {"id": "V6", "status": "passed", "artifact": "testthat::test_file('tests/testthat/test-spi-wrappers.R')"}
+    {"id": "V1", "status": "passed", "artifact": "tests/testthat/test-spi-metadata.R"},
+    {"id": "V2", "status": "passed", "artifact": "R/spi-metadata.R"},
+    {"id": "V3", "status": "passed", "artifact": "R/spi-metadata.R"},
+    {"id": "V4", "status": "passed", "artifact": "R/spi-metadata.R"},
+    {"id": "V5", "status": "passed", "artifact": "tests/testthat/test-spi-metadata.R"},
+    {"id": "V6", "status": "blocked", "artifact": "devtools::check(args = \"--no-manual\")"}
   ],
-  "unresolvedDecisions": [],
+  "unresolvedDecisions": [
+    {
+      "id": "D1",
+      "summary": "Resolve non-metadata full-suite failures and/or accept V6 exception; Pandoc unavailable for vignette build.",
+      "blocking": true
+    }
+  ],
   "artifactRefs": [
-    {"kind": "work-report", "path": ".cg-docs/work-reports/2026-06-25-country-info.md", "status": "completed"}
+    {
+      "kind": "plan",
+      "path": ".cg-docs/plans/2026-08-04-metadata-api-review-follow-up.md",
+      "status": "active"
+    },
+    {
+      "kind": "work-report",
+      "path": ".cg-docs/work-reports/2026-08-04-metadata-api-review-follow-up.md",
+      "status": "blocked"
+    }
   ],
-  "nextCommand": "/cg-review standard"
+  "nextCommand": "/cg-work review:manual"
 }
