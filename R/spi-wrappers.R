@@ -107,20 +107,19 @@ spi_index <- function(version = "master",
   dt[, keep_cols, with = FALSE]
 }
 
-#' Retrieve SPI regional aggregate scores
+#' Retrieve SPI aggregate/group scores
 #'
 #' A convenience wrapper around `spi_get("aggregates", ...)` that retrieves
-#' `SPI_databank_country_and_aggregates.csv` filtered to regional aggregates
+#' `SPI_databank_country_and_aggregates.csv` filtered to aggregate/group rows
 #' only (individual countries are excluded). The result is in long format
-#' with one row per region-year-indicator.
+#' with one row per aggregate-year-indicator.
 #'
 #' @inheritParams spi_get
 #' @param region Character vector of region names (e.g.
 #'   `"Africa Eastern and Southern"`). `NULL` returns all regions.
 #'
-#' @return A `data.table` in long format. Columns: `iso3c`, `country`
-#'   (region name), `date`, `source_id`, `source_name`, `N`, `N_obs`,
-#'   `value`, `footnote`.
+#' @return A `data.table` in long format. Columns: `iso3c`, `date`,
+#'   `country` (aggregate/group name), `source_id`, and `value`.
 #'
 #' @seealso [spi_data()], [spi_index()], [spi_get()], [spi_versions()]
 #'
