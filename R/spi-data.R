@@ -29,8 +29,8 @@ SPI_REQUIRED_COLS <- c("iso3c", "date")
 #'     country-year (wide format).
 #'   * `"index"` — `SPI_index.csv`: pillar and overall SPI index scores
 #'     per country-year (wide format).
-#'   * `"aggregates"` — regional aggregate scores (long format, regions
-#'     only — individual countries are excluded).
+#'   * `"aggregates"` — aggregate/group scores (long format, non-country
+#'     rows only — individual countries are excluded).
 #' @param version Character. Branch name in the SPI repository. Defaults to
 #'   `"master"` (the latest stable version). Use [spi_versions()] to list
 #'   available branches.

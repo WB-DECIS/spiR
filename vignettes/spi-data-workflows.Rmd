@@ -40,16 +40,18 @@ library(data.table)
 library(ggplot2)
 ```
 
-### The three core datasets
+### The core data access functions
 
-`spiR` provides access to three SPI output datasets, each returned as a
+`spiR` provides access to five main SPI value-access functions, each returned as a
 `data.table`:
 
 | Function | Dataset | Format |
 |---|---|---|
 | `spi_data()` | Individual indicator scores | Wide — one row per country-year |
 | `spi_index()` | Pillar and overall SPI scores | Wide — one row per country-year |
-| `spi_aggregates()` | Regional aggregate scores | Long — one row per region-year-indicator |
+| `spi_aggregates()` | Aggregate/group scores | Long — one row per aggregate-year-indicator |
+| `spi_indicator()` | Selected named indicator columns | Wide — one row per country-year |
+| `country_info()` | Country metadata from `SPI_data.csv` | Wide — one row per country-year |
 
 ```{r datasets}
 # Individual indicator scores for all countries and years
@@ -58,8 +60,11 @@ dt_data <- spi_data()
 # Pillar-level and overall SPI index scores
 dt_index <- spi_index()
 
-# Regional aggregate scores (regions only — countries excluded)
+# Aggregate/group scores (non-country rows only)
 dt_agg <- spi_aggregates()
+
+# Country-year metadata only
+dt_country <- country_info()
 ```
 
 Each dataset is a `data.table`. Key columns in `spi_index()`:
@@ -88,11 +93,12 @@ the `version` argument to retrieve historical data.
 
 ## Filtering Data
 
-All three functions accept the same set of filter arguments:
+The main retrieval functions share a common filter interface, with a few
+type-specific arguments:
 
 | Argument | Type | Description |
 |---|---|---|
-| `country` | Character vector of ISO3C codes | Applies to `data` and `index` |
+| `country` | Character vector of ISO3C codes | Applies to `data`, `index`, and `country_info()` |
 | `region` | Character vector of region names | Applies to `aggregates` only |
 | `year` | Integer or numeric vector | Applies to all types |
 | `pillar` | Integer 1–5 | Column filter for `data`/`index`; row filter for `aggregates` |
@@ -141,6 +147,75 @@ standards <- spi_index(dimension = "5.2")
 
 # Census and survey availability indicators only
 census_ind <- spi_data(dimension = "4.1")
+```
+
+### Named indicators with `spi_indicator()`
+
+If you already know the exact SPI indicator codes, `spi_indicator()` lets you
+retrieve only those columns for the selected country/year range rather than the
+full dimension. The first argument is `indicator`, so you can call it either
+positionally or with `indicator =`.
+
+```{r filter-indicator}
+# One specific known indicator for Chile in 2024
+spi_indicator(indicator = "SPI.D1.5.POV", country = "CHL", year = 2024L)
+
+# Two known indicators, including raw values when available
+spi_indicator(
+  indicator = c("SPI.D1.5.POV", "SPI.D2.1.GDDS"),
+  include_raw = TRUE
+)
+```
+
+Setting `include_raw = TRUE` also returns the corresponding `RAW.D...`
+columns when they are available in `SPI_data.csv`.
+
+`spi_indicator()` is a filtered form of `spi_data()` that returns only the
+requested indicator columns. Use `spi_data(dimension = ...)` when you want all
+indicators in a dimension, and use `spi_indicator()` when you want a small set
+of exact indicator columns.
+
+### Country metadata with `country_info()`
+
+Use `country_info()` when you want a clean metadata lookup table rather than
+indicator values. It returns one row per country-year and keeps fields such as
+ISO codes, region, income level, lending type, and population.
+
+```{r filter-country-info}
+# Metadata for Chile in 2024
+chl_meta <- country_info(country = "CHL", year = 2024L)
+
+# Metadata for a small country set across years
+nordics_meta <- country_info(country = c("NOR", "SWE", "FIN"), year = 2022:2024)
+```
+
+### Metadata catalog access
+
+When you need to inspect the SPI structure (pillars, dimensions, indicators)
+before pulling values, use the metadata access functions.
+
+The examples below use `eval = FALSE` so vignette builds do not require live
+network calls.
+
+```{r metadata-access, eval=FALSE}
+  # Pillar-level metadata
+  p <- metadata_pillars()
+
+  # Dimensions for one pillar
+  d <- metadata_dimensions(pillar = "2")
+
+  # The metadata helpers also accept SPI metadata IDs
+  d_id <- metadata_dimensions(pillar = "SPI.INDEX.PIL2")
+
+  # Full associated metadata from one filter
+  m <- metadata(pillar = "1")
+
+  # Dimension filters can use either the canonical P.D value or the SPI ID
+  m_dim <- metadata(dimension = "1.5")
+  m_dim_id <- metadata(dimension = "SPI.DIM1.5.INDEX")
+
+  # Indicator-focused metadata lookup
+  i <- metadata(indicator = "SPI.D1.5.POV")
 ```
 
 ### Combining filters
@@ -256,6 +331,67 @@ bottom10 <- tail(latest_year, 10)
 ## Visualization
 
 The examples below use `ggplot2`.
+
+### Built-in visualization helpers
+
+`spiR` includes ready-to-use plotting wrappers for the most common SPI
+visualization tasks. These helpers download the required SPI data, reshape it
+internally, and return plots styled with the built-in World Bank Data
+Visualization Style Guide theme.
+
+The examples below are shown but not evaluated during vignette builds, which
+matches the existing convention for code that would otherwise require live
+network access.
+
+| Function | Purpose | Output |
+|---|---|---|
+| `spi_plot_pillars()` | Plot the five SPI pillars over time for one country | `ggplot` |
+| `spi_plot_trend()` | Compare one SPI series across countries over time | `ggplot` |
+| `spi_plot_country_vs_region()` | Compare one country against its official regional aggregate | `ggplot` |
+| `spi_plot_radar()` | Show one country's pillar profile versus its region in one year | `ggplot` |
+| `spi_plot_regions()` | Compare one SPI series across regions over time | `ggplot` |
+| `spi_plot_region_pillars()` | Plot pillar trends for one region using official SPI aggregates | `ggplot` |
+| `spi_plot_map()` | Draw a world SPI choropleth | `ggplot` or `girafe` |
+
+```{r built-in-plots, eval=FALSE}
+# Pillar trajectories for one country
+spi_plot_pillars(country = "CHL")
+
+# Compare overall SPI across countries over time
+spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
+
+# Country versus regional average
+spi_plot_country_vs_region(
+  country = "CHL",
+  value_col = "SPI.INDEX.PIL1"
+)
+
+# Radar profile for one year
+spi_plot_radar(country = "CHL", year = 2024L)
+
+# Region-level comparisons
+spi_plot_regions(value_col = "SPI.INDEX")
+spi_plot_region_pillars(region = "Latin America & Caribbean")
+
+# Static and interactive map outputs
+spi_plot_map(
+  value_col = "SPI.INDEX",
+  year = 2024L,
+  interactive = FALSE
+)
+
+spi_plot_map(
+  value_col = "SPI.INDEX",
+  year = 2024L,
+  interactive = TRUE
+)
+```
+
+Most plotting helpers require `ggplot2`. `spi_plot_map()` also
+requires `sf`, and interactive maps additionally require `ggiraph`. The World
+Bank styling is built into the package.
+
+### Custom ggplot workflows
 
 ### Overall SPI score by country (bar chart)
 

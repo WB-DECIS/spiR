@@ -2,7 +2,7 @@
 % Please edit documentation in R/spi-wrappers.R
 \name{spi_aggregates}
 \alias{spi_aggregates}
-\title{Retrieve SPI regional aggregate scores}
+\title{Retrieve SPI aggregate/group scores}
 \usage{
 spi_aggregates(
   version = "master",
@@ -34,15 +34,14 @@ both are supplied, \code{dimension} takes precedence. \code{NULL} returns all
 dimensions.}
 }
 \value{
-A \code{data.table} in long format. Columns: \code{iso3c}, \code{country}
-(region name), \code{date}, \code{source_id}, \code{source_name}, \code{N}, \code{N_obs},
-\code{value}, \code{footnote}.
+A \code{data.table} in long format. Columns: \code{iso3c}, \code{date},
+\code{country} (aggregate/group name), \code{source_id}, and \code{value}.
 }
 \description{
 A convenience wrapper around \code{spi_get("aggregates", ...)} that retrieves
-\code{SPI_databank_country_and_aggregates.csv} filtered to regional aggregates
+\code{SPI_databank_country_and_aggregates.csv} filtered to aggregate/group rows
 only (individual countries are excluded). The result is in long format
-with one row per region-year-indicator.
+with one row per aggregate-year-indicator.
 }
 \examples{
 \dontrun{

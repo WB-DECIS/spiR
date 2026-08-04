@@ -1,5 +1,13 @@
 # Tests for spi_get(). All unit tests — spi_download() is mocked.
 
+setup({
+  spi_clear_cache()
+})
+
+teardown({
+  spi_clear_cache()
+})
+
 # ---------------------------------------------------------------------------
 # Mock setup
 # ---------------------------------------------------------------------------
@@ -52,9 +60,9 @@ make_mock_agg_dt <- function() {
 }
 
 mock_spi_download <- function(file_path, version = "master") {
+  if (grepl("aggregates", file_path))  return(make_mock_agg_dt())
   if (grepl("SPI_data", file_path))    return(make_mock_data_dt())
   if (grepl("SPI_index", file_path))   return(make_mock_index_dt())
-  if (grepl("aggregates", file_path))  return(make_mock_agg_dt())
   stop("Unknown file_path in mock: ", file_path)
 }
 

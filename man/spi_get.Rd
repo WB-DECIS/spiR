@@ -21,8 +21,8 @@ spi_get(
 country-year (wide format).
 \item \code{"index"} — \code{SPI_index.csv}: pillar and overall SPI index scores
 per country-year (wide format).
-\item \code{"aggregates"} — regional aggregate scores (long format, regions
-only — individual countries are excluded).
+\item \code{"aggregates"} — aggregate/group scores (long format, non-country
+rows only — individual countries are excluded).
 }}
 
 \item{version}{Character. Branch name in the SPI repository. Defaults to
@@ -30,7 +30,8 @@ only — individual countries are excluded).
 available branches.}
 
 \item{country}{Character vector of ISO 3166-1 alpha-3 country codes (e.g.
-\code{c("NOR", "SWE")}). Applies to \code{type = "data"} and \code{type = "index"}
+\code{c("NOR", "SWE")}). Case-insensitive; codes are coerced to uppercase
+automatically. Applies to \code{type = "data"} and \code{type = "index"}
 only. \code{NULL} returns all countries.}
 
 \item{year}{Integer vector of years (e.g. \code{2023:2024}). Applies to all
