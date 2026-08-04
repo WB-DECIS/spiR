@@ -28,6 +28,16 @@ spi_plot_regions <- function(regions = NULL,
                              version = "master") {
   .spi_plot_check_deps("ggplot2")
 
+  if (!is.character(value_col) ||
+      length(value_col) != 1L ||
+      is.na(value_col) ||
+      !nzchar(trimws(value_col))) {
+    cli::cli_abort(
+      "{.arg value_col} must be a single non-empty character string."
+    )
+  }
+  value_col <- trimws(value_col)
+
   region_dt <- .spi_plot_fetch_aggregates(
     value_cols = value_col,
     version = version,

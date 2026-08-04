@@ -150,6 +150,15 @@ test_that("spi_plot_regions() returns ggplot", {
   expect_s3_class(out, "ggplot")
 })
 
+test_that("spi_plot_regions() rejects multiple value columns", {
+  skip_if_not_installed("ggplot2")
+
+  expect_error(
+    spi_plot_regions(value_col = c("SPI.INDEX", "SPI.INDEX.PIL1")),
+    "single non-empty character"
+  )
+})
+
 test_that("spi_plot_region_pillars() returns ggplot", {
   skip_if_not_installed("ggplot2")
 
