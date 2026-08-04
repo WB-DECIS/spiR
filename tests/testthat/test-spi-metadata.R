@@ -62,6 +62,33 @@ mock_spi_download_inconsistent_pillar_text <- function(file_path,
   dt
 }
 
+mock_spi_download_empty_indicator_keys <- function(file_path,
+                                                    version = "master") {
+  dt <- make_mock_metadata()
+  dt[, indicator := NA_character_]
+  dt[, indicator_id := ""]
+  dt
+}
+
+mock_spi_download_conflicting_headers <- function(file_path,
+                                                  version = "master") {
+  dt <- make_mock_metadata()
+  dt[, extra_pillar := pillar]
+  data.table::setnames(dt, "extra_pillar", "Pillar")
+  dt
+}
+
+mock_spi_download_spaced_headers <- function(file_path,
+                                              version = "master") {
+  dt <- make_mock_metadata()
+  data.table::setnames(
+    dt,
+    old = c("pillar_name", "dimension_id", "indicator_abv"),
+    new = c("Pillar Name", "dimension-id", "indicator abv")
+  )
+  dt
+}
+
 test_that("metadata() is exported and returns expected structure", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
   result <- metadata(pillar = "1")
@@ -151,6 +178,24 @@ test_that("metadata_pillars() returns one row per pillar key", {
   expect_equal(anyDuplicated(result$pillar), 0L)
 })
 
+test_that("metadata() does not return placeholder indicators", {
+  local_mocked_bindings(spi_download = mock_spi_download_empty_indicator_keys)
+  result <- metadata()
+
+  expect_false(anyNA(result$indicators$indicator))
+  expect_equal(nrow(result$indicators), 0L)
+})
+
+test_that("metadata() rejects conflicting hierarchy metadata", {
+  local_mocked_bindings(spi_download = mock_spi_download_inconsistent_pillar_text)
+
+  expect_error(
+    metadata_pillars(),
+    "conflicting|ambiguous",
+    ignore.case = TRUE
+  )
+})
+
 test_that("metadata_dimensions() filters by pillar", {
   local_mocked_bindings(spi_download = mock_spi_download_metadata)
   result <- metadata_dimensions(pillar = "2")
@@ -170,6 +215,23 @@ test_that("metadata loader aborts when required columns are missing", {
   expect_error(
     metadata(),
     "missing required metadata columns"
+  )
+})
+
+test_that("metadata loader normalizes spaced and punctuated headers", {
+  local_mocked_bindings(spi_download = mock_spi_download_spaced_headers)
+  result <- metadata()
+
+  expect_s3_class(result$indicators, "data.table")
+  expect_true(all(c("pillar_name", "dimension_id", "indicator_abv") %in%
+    names(.spi_read_metadata())))
+})
+
+test_that("metadata loader rejects normalized header collisions", {
+  local_mocked_bindings(spi_download = mock_spi_download_conflicting_headers)
+  expect_error(
+    metadata(),
+    "ambiguous column names"
   )
 })
 
