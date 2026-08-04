@@ -601,3 +601,44 @@ metadata_pillars <- function(version = "master") {
 metadata_dimensions <- function(pillar = NULL, version = "master") {
   metadata(pillar = pillar, version = version)[["dimensions"]]
 }
+
+
+#' Retrieve SPI indicator metadata
+#'
+#' Convenience wrapper that returns the indicator block from [metadata()].
+#'
+#' @param pillar Character scalar pillar filter. Accepts either the canonical
+#'   pillar value (e.g. `"2"`) or the SPI pillar ID (e.g.
+#'   `"SPI.INDEX.PIL2"`), or `NULL`.
+#' @param dimension Character scalar dimension filter. Accepts either the
+#'   canonical `"P.D"` form (e.g. `"2.1"`) or the SPI dimension ID (e.g.
+#'   `"SPI.DIM2.1.INDEX"`), or `NULL`.
+#' @param indicator Character scalar indicator filter. Accepts the canonical
+#'   SPI indicator code (e.g. `"SPI.D1.5.POV"`), or `NULL`.
+#' @param version Character. Branch name in SPI repository. Defaults to
+#'   `"master"`.
+#'
+#' @return A `data.table` with indicator-level metadata. This function returns
+#'   metadata definitions (names, descriptions, scoring, IDs), not country-year
+#'   indicator values; for data values see [spi_indicator()].
+#' @seealso [metadata()], [metadata_pillars()], [metadata_dimensions()],
+#'   [spi_indicator()]
+#' @examples
+#' \dontrun{
+#' metadata_indicators()
+#' metadata_indicators(pillar = "2")
+#' metadata_indicators(dimension = "2.1")
+#' metadata_indicators(indicator = "SPI.D2.1.GDDS")
+#' }
+#' @export
+metadata_indicators <- function(pillar = NULL,
+                                dimension = NULL,
+                                indicator = NULL,
+                                version = "master") {
+  metadata(
+    pillar = pillar,
+    dimension = dimension,
+    indicator = indicator,
+    version = version
+  )[["indicators"]]
+}

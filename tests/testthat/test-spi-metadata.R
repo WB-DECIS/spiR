@@ -210,6 +210,66 @@ test_that("metadata_dimensions() accepts SPI pillar IDs", {
   expect_true(all(result$pillar == "2"))
 })
 
+test_that("metadata_indicators() returns indicator table", {
+  local_mocked_bindings(spi_download = mock_spi_download_metadata)
+  result <- metadata_indicators()
+  expect_s3_class(result, "data.table")
+  expect_true(all(c(
+    "pillar", "dimension", "indicator", "indicator_name",
+    "indicator_description", "indicator_id", "indicator_scoring",
+    "indicator_abv"
+  ) %in% names(result)))
+})
+
+test_that("metadata_indicators() honors pillar, dimension, and indicator", {
+  local_mocked_bindings(spi_download = mock_spi_download_metadata)
+
+  by_pillar <- metadata_indicators(pillar = "2")
+  expect_true(all(by_pillar$pillar == "2"))
+
+  by_dimension <- metadata_indicators(dimension = "2.1")
+  expect_true(all(by_dimension$dimension == "2.1"))
+
+  by_indicator <- metadata_indicators(indicator = "SPI.D2.1.GDDS")
+  expect_equal(unique(by_indicator$indicator), "SPI.D2.1.GDDS")
+})
+
+test_that("metadata_indicators() forwards arguments to metadata()", {
+  call_log <- NULL
+
+  mock_metadata <- function(pillar = NULL,
+                            dimension = NULL,
+                            indicator = NULL,
+                            version = "master") {
+    call_log <<- list(
+      pillar = pillar,
+      dimension = dimension,
+      indicator = indicator,
+      version = version
+    )
+
+    list(
+      pillars = data.table::data.table(),
+      dimensions = data.table::data.table(),
+      indicators = data.table::data.table(indicator = "SPI.D2.1.GDDS")
+    )
+  }
+
+  local_mocked_bindings(metadata = mock_metadata)
+  result <- metadata_indicators(
+    pillar = "2",
+    dimension = "2.1",
+    indicator = "SPI.D2.1.GDDS",
+    version = "SPI2023"
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_equal(call_log$pillar, "2")
+  expect_equal(call_log$dimension, "2.1")
+  expect_equal(call_log$indicator, "SPI.D2.1.GDDS")
+  expect_equal(call_log$version, "SPI2023")
+})
+
 test_that("metadata loader aborts when required columns are missing", {
   local_mocked_bindings(spi_download = mock_spi_download_missing_col)
   expect_error(
