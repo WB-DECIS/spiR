@@ -49,20 +49,22 @@ SPI_WB_SEQ <- c(
 
 #' Discrete WB colour scale (replacement for wbplot::scale_color_wb_d)
 #'
+#' @param n Integer. Number of discrete levels to support.
 #' @param ... Passed to [ggplot2::scale_colour_manual()].
 #' @return A ggplot2 scale.
 #' @keywords internal
-.spi_scale_color_wb_d <- function(...) {
-  ggplot2::scale_colour_manual(values = .spi_wb_pal_d(length(SPI_WB_CAT)), ...)
+.spi_scale_color_wb_d <- function(n = length(SPI_WB_CAT), ...) {
+  ggplot2::scale_colour_manual(values = .spi_wb_pal_d(n), ...)
 }
 
 #' Discrete WB fill scale (replacement for wbplot::scale_fill_wb_d)
 #'
+#' @param n Integer. Number of discrete levels to support.
 #' @param ... Passed to [ggplot2::scale_fill_manual()].
 #' @return A ggplot2 scale.
 #' @keywords internal
-.spi_scale_fill_wb_d <- function(...) {
-  ggplot2::scale_fill_manual(values = .spi_wb_pal_d(length(SPI_WB_CAT)), ...)
+.spi_scale_fill_wb_d <- function(n = length(SPI_WB_CAT), ...) {
+  ggplot2::scale_fill_manual(values = .spi_wb_pal_d(n), ...)
 }
 
 #' Continuous WB sequential fill scale (replacement for wbplot::scale_fill_wb_c)

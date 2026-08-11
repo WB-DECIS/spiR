@@ -63,7 +63,7 @@ spi_plot_region_pillars <- function(region,
   ) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    .spi_scale_color_wb_d() +
+    .spi_scale_color_wb_d(n = length(unique(summary_dt$pillar))) +
     ggplot2::scale_y_continuous(limits = c(0, 100)) +
     ggplot2::labs(
       title = paste0("SPI pillars over time: ", region),

@@ -66,7 +66,7 @@ spi_plot_trend <- function(countries,
   ) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    .spi_scale_color_wb_d() +
+    .spi_scale_color_wb_d(n = length(unique(dt$country_label))) +
     ggplot2::scale_y_continuous(limits = scale_info$limits) +
     ggplot2::labs(
       title = paste0(value_col, " over time"),

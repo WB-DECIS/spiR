@@ -71,7 +71,7 @@ spi_plot_pillars <- function(country,
   ggplot2::ggplot(long, ggplot2::aes(x = date, y = value, color = pillar)) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    .spi_scale_color_wb_d() +
+    .spi_scale_color_wb_d(n = length(unique(long$pillar))) +
     ggplot2::labs(
       title = paste0("SPI pillars over time: ", selected_name),
       x = NULL,
