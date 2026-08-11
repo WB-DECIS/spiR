@@ -4,9 +4,11 @@
 \alias{.spi_scale_color_wb_d}
 \title{Discrete WB colour scale (replacement for wbplot::scale_color_wb_d)}
 \usage{
-.spi_scale_color_wb_d(...)
+.spi_scale_color_wb_d(n = length(SPI_WB_CAT), ...)
 }
 \arguments{
+\item{n}{Integer. Number of discrete levels to support.}
+
 \item{...}{Passed to \code{\link[ggplot2:scale_colour_manual]{ggplot2::scale_colour_manual()}}.}
 }
 \value{

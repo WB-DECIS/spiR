@@ -19,9 +19,9 @@ SPI_PLOT_GEOGRAPHIC_REGIONS <- c(
 #' regional aggregate, styled with the World Bank Data Visualization Style
 #' Guide.
 #'
-#' @param regions Optional character vector of region names. `NULL`
-#'   (default) plots the seven main geographic regions. Other aggregate
-#'   entities can be selected explicitly by supplying their names.
+#' @param regions Optional character vector of official geographic region
+#'   names. `NULL` (default) plots the seven main geographic regions. Income
+#'   groups and other World Bank aggregates are not supported.
 #' @param value_col Character scalar. SPI column to plot. Defaults to
 #'   `"SPI.INDEX"`.
 #' @param version Character. SPI branch. Defaults to `"master"`.
@@ -52,6 +52,9 @@ spi_plot_regions <- function(regions = NULL,
     }
 
     regions <- unique(trimws(regions))
+    if (length(regions) == 0L || any(!nzchar(regions))) {
+      cli::cli_abort("{.arg regions} must contain at least one region name.")
+    }
     unsupported <- setdiff(regions, SPI_PLOT_GEOGRAPHIC_REGIONS)
     if (length(unsupported) > 0L) {
       cli::cli_abort(c(
