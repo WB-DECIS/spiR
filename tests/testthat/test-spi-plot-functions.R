@@ -141,6 +141,15 @@ test_that("spi_plot_radar() returns ggplot", {
   expect_s3_class(out, "ggplot")
 })
 
+test_that("spi_plot_radar() rejects non-integer years", {
+  skip_if_not_installed("ggplot2")
+
+  expect_error(
+    spi_plot_radar(country = "CHL", year = 2024.5),
+    "single integer year"
+  )
+})
+
 test_that("spi_plot_regions() returns ggplot", {
   skip_if_not_installed("ggplot2")
 

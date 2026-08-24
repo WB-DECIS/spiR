@@ -62,6 +62,18 @@ spi_change <- function(data,
   values <- suppressWarnings(as.numeric(result[[value_col]]))
   result[, `:=`(.spi_change_year = years, .spi_change_value = values)]
 
+  duplicate_values <- result[!is.na(.spi_change_year) &
+    !is.na(.spi_change_value),
+    .(n_values = data.table::uniqueN(.spi_change_value)),
+    by = c(group_cols, ".spi_change_year")][n_values > 1L]
+  if (nrow(duplicate_values) > 0L) {
+    cli::cli_abort(c(
+      "SPI change data has conflicting values for the same group-year.",
+      "x" = "Each combination of {.field {group_cols}} and {.field {year_col}} must have one score.",
+      "i" = "Resolve duplicate group-year rows before calling {.fn spi_change}."
+    ))
+  }
+
   changes <- result[, {
     valid <- which(!is.na(.spi_change_year) & !is.na(.spi_change_value))
     previous <- rep(NA_real_, .N)

@@ -45,3 +45,16 @@ test_that("spi_change validates required arguments", {
     "non-empty character vector"
   )
 })
+
+test_that("spi_change rejects conflicting duplicate group-year values", {
+  data <- data.table::data.table(
+    iso3c = c("AAA", "AAA", "AAA"),
+    date = c(2020L, 2020L, 2021L),
+    SPI.INDEX = c(10, 20, 30)
+  )
+
+  expect_error(
+    spi_change(data),
+    "conflicting values for the same group-year"
+  )
+})

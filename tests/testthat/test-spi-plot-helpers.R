@@ -168,6 +168,24 @@ test_that(".spi_plot_join_meta() aborts when required metadata columns are missi
   )
 })
 
+test_that(".spi_plot_join_meta() rejects duplicate country-year metadata", {
+  plot_dt <- data.table::data.table(iso3c = "CHL", date = 2024L, value = 1)
+
+  local_mocked_bindings(
+    country_info = function(version = "master", country = NULL, year = NULL) {
+      data.table::data.table(
+        iso3c = c("CHL", "CHL"), date = c(2024L, 2024L),
+        region = c("A", "B")
+      )
+    }
+  )
+
+  expect_error(
+    .spi_plot_join_meta(plot_dt, cols = "region"),
+    "duplicate country-year keys"
+  )
+})
+
 test_that(".spi_plot_floor_year_to_five() rounds down to previous five-year mark", {
   expect_equal(.spi_plot_floor_year_to_five(2016L), 2015L)
   expect_equal(.spi_plot_floor_year_to_five(2015L), 2015L)

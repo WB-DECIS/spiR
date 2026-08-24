@@ -7,9 +7,15 @@
 #' `SPI_data.csv` — individual indicator scores per country-year in wide
 #' format.
 #'
-#' @inheritParams spi_get
+#' @param version Character scalar naming the SPI data branch. Defaults to
+#'   `"master"`.
+#' @param year Numeric or integer vector of years. `NULL` returns all years.
 #' @param country Character vector of ISO 3166-1 alpha-3 country codes (e.g.
 #'   `c("NOR", "SWE")`). `NULL` returns all countries.
+#' @param pillar Optional pillar filter. Accepts a pillar number or SPI pillar
+#'   ID. `NULL` returns all pillars.
+#' @param dimension Optional dimension filter. Accepts a dimension code or SPI
+#'   dimension ID. `NULL` returns all dimensions.
 #'
 #' @return A `data.table` in wide format with one row per country-year.
 #'   Columns include `iso3c`, `date`, all `SPI.D*`/`RAW.D*` indicator
@@ -60,9 +66,15 @@ spi_data <- function(version = "master",
 #' `SPI_index.csv` — pillar-level and overall SPI index scores per
 #' country-year in wide format.
 #'
-#' @inheritParams spi_get
+#' @param version Character scalar naming the SPI data branch. Defaults to
+#'   `"master"`.
+#' @param year Numeric or integer vector of years. `NULL` returns all years.
 #' @param country Character vector of ISO 3166-1 alpha-3 country codes (e.g.
 #'   `c("NOR", "SWE")`). `NULL` returns all countries.
+#' @param pillar Optional pillar filter. Accepts a pillar number or SPI pillar
+#'   ID. `NULL` returns all pillars.
+#' @param dimension Optional dimension filter. Accepts a dimension code or SPI
+#'   dimension ID. `NULL` returns all dimensions.
 #'
 #' @return A `data.table` in wide format with one row per country-year.
 #'   Columns include `country`, `iso3c`, `date`, `SPI.INDEX`,

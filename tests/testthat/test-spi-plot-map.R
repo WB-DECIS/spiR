@@ -45,6 +45,18 @@ test_that("spi_plot_map() returns ggplot when interactive = FALSE", {
   expect_s3_class(out, "ggplot")
 })
 
+test_that("spi_plot_map() rejects non-integer years", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("sf")
+
+  expect_error(
+    spi_plot_map(
+      value_col = "SPI.INDEX", year = 2024.5, interactive = FALSE
+    ),
+    "single integer year"
+  )
+})
+
 test_that("spi_plot_map() uses metadata display label in default title", {
   skip_if_not_installed("ggplot2")
   skip_if_not_installed("sf")
