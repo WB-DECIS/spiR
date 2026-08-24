@@ -29,7 +29,8 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 Plots the five SPI pillar trajectories over time for one official SPI
 regional aggregate, styled with the World Bank Data Visualization Style
 Guide. Values come from the official SPI regional aggregates so they match
-published figures exactly.
+published figures exactly. Pillar legend labels use metadata-derived names
+while endpoint labels show SPI pillar source codes.
 }
 \examples{
 \dontrun{

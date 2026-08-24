@@ -19,12 +19,13 @@ Depends:
 Imports:
     cli (>= 3.0.0),
     data.table (>= 1.14.0),
+    ggrepel (>= 0.9.5),
+    ggplot2 (>= 3.4.0),
     httr2 (>= 1.0.0),
     tools,
     utils
 Suggests:
     ggiraph (>= 0.9.2),
-    ggplot2 (>= 3.4.0),
     knitr (>= 1.40),
     rmarkdown (>= 2.20),
     sf (>= 1.0.0),

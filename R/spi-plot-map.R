@@ -326,7 +326,11 @@ spi_plot_map <- function(value_col,
     }
   }
 
-  ttl <- if (is.null(label) || !nzchar(label)) value_col else label
+  ttl <- if (is.null(label) || !nzchar(label)) {
+    .spi_plot_display_label(value_col = value_col, version = version)
+  } else {
+    label
+  }
   map_sf <- .spi_map_hover(data.table::as.data.table(map_sf), ttl, scale_info$digits)
   map_sf <- sf::st_as_sf(map_sf)
 

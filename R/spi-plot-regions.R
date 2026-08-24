@@ -17,7 +17,8 @@ SPI_PLOT_GEOGRAPHIC_REGIONS <- c(
 #'
 #' Plots a single SPI column over time with one line per official SPI
 #' regional aggregate, styled with the World Bank Data Visualization Style
-#' Guide.
+#' Guide. The title uses metadata-derived SPI names and endpoint labels show
+#' regional aggregate codes.
 #'
 #' @param regions Optional character vector of official geographic region
 #'   names. `NULL` (default) plots the seven main geographic regions. Income
@@ -40,7 +41,17 @@ SPI_PLOT_GEOGRAPHIC_REGIONS <- c(
 spi_plot_regions <- function(regions = NULL,
                              value_col = "SPI.INDEX",
                              version = "master") {
-  .spi_plot_check_deps("ggplot2")
+  .spi_plot_check_deps(c("ggplot2", "ggrepel"))
+
+  if (!is.character(value_col) ||
+      length(value_col) != 1L ||
+      is.na(value_col) ||
+      !nzchar(trimws(value_col))) {
+    cli::cli_abort(
+      "{.arg value_col} must be a single non-empty character string."
+    )
+  }
+  value_col <- trimws(value_col)
 
   if (is.null(regions)) {
     regions <- SPI_PLOT_GEOGRAPHIC_REGIONS
@@ -70,10 +81,19 @@ spi_plot_regions <- function(regions = NULL,
     version = version,
     region = regions
   )
-  region_dt <- region_dt[, .(region, date, value)]
+  if (!"region_code" %in% names(region_dt)) {
+    region_dt[, region_code := region]
+  }
+  region_dt <- region_dt[, .(region, region_code, date, value)]
   data.table::setorder(region_dt, region, date)
 
-  scale_info <- .spi_plot_scale(region_dt$value)
+  axis_scale <- .spi_plot_scale_x_year(region_dt)
+  latest <- .spi_plot_latest_points(
+    dt = region_dt,
+    series_col = "region",
+    code_col = "region_code"
+  )
+  display_label <- .spi_plot_display_label(value_col = value_col, version = version)
 
   ggplot2::ggplot(
     region_dt,
@@ -81,14 +101,28 @@ spi_plot_regions <- function(regions = NULL,
   ) +
     ggplot2::geom_line(linewidth = 1, lineend = "round", na.rm = FALSE) +
     ggplot2::geom_point(size = 1.8, na.rm = TRUE) +
-    .spi_scale_color_wb_d(n = length(unique(region_dt$region))) +
-    ggplot2::scale_y_continuous(limits = scale_info$limits) +
+    ggrepel::geom_text_repel(
+      data = latest,
+      ggplot2::aes(label = region_code),
+      direction = "y",
+      nudge_x = 0.25,
+      hjust = 0,
+      size = 3,
+      segment.color = SPI_WB_GRID,
+      show.legend = FALSE,
+      na.rm = TRUE,
+      max.overlaps = Inf
+    ) +
+    .spi_scale_color_wb_d() +
+    axis_scale +
+    ggplot2::coord_cartesian(clip = "off") +
     ggplot2::labs(
-      title = paste0(value_col, " by region over time"),
+      title = paste0(display_label, " by region over time"),
       x = NULL,
       y = "Score",
       color = NULL,
       caption = SPI_PLOT_CAPTION
     ) +
-    .spi_theme_wb("line")
+    .spi_theme_wb("line") +
+    ggplot2::theme(plot.margin = ggplot2::margin(5.5, 25, 5.5, 5.5))
 }

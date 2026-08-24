@@ -24,6 +24,8 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Draws one line per SPI pillar across all available years for a single
 country, styled with the World Bank Data Visualization Style Guide.
+Pillar legend labels are metadata-derived names, while endpoint labels
+show SPI pillar source codes.
 }
 \examples{
 \dontrun{

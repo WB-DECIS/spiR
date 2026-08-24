@@ -20,7 +20,9 @@ A \link[ggplot2:ggplot]{ggplot2::ggplot} object.
 \description{
 Plots a single SPI column over time with one line per country, styled
 with the World Bank Data Visualization Style Guide. Works with any SPI
-index, dimension, or indicator column.
+index, dimension, or indicator column. The chart title uses
+metadata-derived SPI names, and endpoint labels show ISO3 country codes
+for the latest non-missing observation in each series.
 }
 \examples{
 \dontrun{

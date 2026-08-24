@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "compound-gpid-active-state-v1",
+  "updatedAt": "2026-08-04T16:40:00Z",
+  "workflow": "/cg-work",
+  "status": "completed",
+  "branch": "dev_visualizations",
+  "plan": ".cg-docs/plans/2026-08-04-spi-visualization-chart-improvements.md",
+  "executionReport": ".cg-docs/work-reports/2026-08-04-spi-visualization-chart-improvements.md",
+  "currentPhase": null,
+  "evidenceStatus": [
+    {
+      "id": "V1",
+      "status": "passed",
+      "artifact": "DESCRIPTION"
+    },
+    {
+      "id": "V2",
+      "status": "passed",
+      "artifact": "tests/testthat/test-spi-plot-helpers.R"
+    },
+    {
+      "id": "V3",
+      "status": "passed",
+      "artifact": "tests/testthat/test-spi-plot-functions.R"
+    },
+    {
+      "id": "V4",
+      "status": "passed",
+      "artifact": "visualization-review-output/*.png"
+    },
+    {
+      "id": "V5",
+      "status": "passed",
+      "artifact": "README.md + man/*.Rd"
+    },
+    {
+      "id": "V6",
+      "status": "passed",
+      "artifact": "devtools::test(filter = \"spi-plot\"); devtools::test()"
+    },
+    {
+      "id": "V7",
+      "status": "exception-known",
+      "artifact": "devtools::check(args = \"--no-manual\") blocked by missing Pandoc"
+    }
+  ],
+  "artifactRefs": [
+    {
+      "kind": "plan",
+      "path": ".cg-docs/plans/2026-08-04-spi-visualization-chart-improvements.md",
+      "status": "completed"
+    },
+    {
+      "kind": "work-report",
+      "path": ".cg-docs/work-reports/2026-08-04-spi-visualization-chart-improvements.md",
+      "status": "completed"
+    }
+  ],
+  "nextCommand": "/cg-work review:manual"
+}

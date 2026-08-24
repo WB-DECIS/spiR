@@ -64,7 +64,10 @@ test_that("spi_plot_pillars() returns ggplot", {
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
-    spi_index = function(...) make_mock_index_plot_dt()
+    spi_index = function(...) make_mock_index_plot_dt(),
+    .spi_plot_display_labels = function(value_cols, version = "master") {
+      stats::setNames(paste0("Label ", value_cols), value_cols)
+    }
   )
 
   out <- spi_plot_pillars(country = "CHL")
@@ -76,7 +79,8 @@ test_that("spi_plot_trend() returns ggplot", {
 
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
-    .spi_plot_fetch = function(...) make_mock_fetch_dt()
+    .spi_plot_fetch = function(...) make_mock_fetch_dt(),
+    .spi_plot_display_label = function(value_col, version = "master") "SPI Index"
   )
 
   out <- spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
@@ -100,6 +104,9 @@ test_that("spi_plot_country_vs_region() returns ggplot", {
     .spi_plot_join_meta = function(dt, ...) {
       dt[, region := "Latin America & Caribbean"]
       dt
+    },
+    .spi_plot_display_label = function(value_col, version = "master") {
+      "SPI Index"
     }
   )
 
@@ -124,6 +131,9 @@ test_that("spi_plot_radar() returns ggplot", {
     .spi_plot_join_meta = function(dt, ...) {
       dt[, region := "Latin America & Caribbean"]
       dt
+    },
+    .spi_plot_display_labels = function(value_cols, version = "master") {
+      stats::setNames(paste0("Pillar ", seq_along(value_cols)), value_cols)
     }
   )
 
@@ -145,7 +155,8 @@ test_that("spi_plot_regions() returns ggplot", {
         source_id = c("SPI.INDEX", "SPI.INDEX"),
         value = c(58, 60)
       )
-    }
+    },
+    .spi_plot_display_label = function(value_col, version = "master") "SPI Index"
   )
 
   out <- spi_plot_regions(value_col = "SPI.INDEX")
@@ -164,6 +175,15 @@ test_that("spi_plot_regions() rejects non-geographic aggregates", {
   )
 })
 
+test_that("spi_plot_regions() rejects multiple value columns", {
+  skip_if_not_installed("ggplot2")
+
+  expect_error(
+    spi_plot_regions(value_col = c("SPI.INDEX", "SPI.INDEX.PIL1")),
+    "single non-empty character"
+  )
+})
+
 test_that("spi_plot_region_pillars() returns ggplot", {
   skip_if_not_installed("ggplot2")
 
@@ -176,6 +196,9 @@ test_that("spi_plot_region_pillars() returns ggplot", {
         source_id = rep(paste0("SPI.INDEX.PIL", 1:5), each = 2),
         value = c(68, 70, 63, 65, 58, 60, 53, 55, 48, 50)
       )
+    },
+    .spi_plot_display_labels = function(value_cols, version = "master") {
+      stats::setNames(paste0("Label ", value_cols), value_cols)
     }
   )
 
@@ -195,4 +218,48 @@ test_that("spi_plot_region_pillars() aborts when weighted = FALSE", {
     ),
     "official SPI regional aggregates"
   )
+})
+
+test_that("spi_plot_trend() uses metadata display labels in title", {
+  skip_if_not_installed("ggplot2")
+
+  local_mocked_bindings(
+    .spi_plot_check_deps = function(pkgs) invisible(NULL),
+    .spi_plot_fetch = function(...) make_mock_fetch_dt(),
+    .spi_plot_display_label = function(value_col, version = "master") "SPI Index"
+  )
+
+  out <- spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
+  expect_equal(out$labels$title, "SPI Index over time")
+})
+
+test_that("spi_plot_trend() uses five-year floor and latest-code labels", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ggrepel")
+
+  local_mocked_bindings(
+    .spi_plot_check_deps = function(pkgs) invisible(NULL),
+    .spi_plot_fetch = function(...) {
+      data.table::data.table(
+        iso3c = c("CHL", "CHL", "PER", "PER"),
+        date = c(2016L, 2025L, 2018L, 2025L),
+        country = c("Chile", "Chile", "Peru", "Peru"),
+        value = c(0.50, 0.72, 0.45, 0.61)
+      )
+    },
+    .spi_plot_display_label = function(value_col, version = "master") "SPI Index"
+  )
+
+  out <- spi_plot_trend(countries = c("CHL", "PER"), value_col = "SPI.INDEX")
+  x_scale <- out$scales$get_scales("x")
+  y_scale <- out$scales$get_scales("y")
+
+  expect_equal(x_scale$limits[1], 2015)
+  expect_true(x_scale$limits[2] > 2025)
+  expect_null(y_scale)
+
+  built <- ggplot2::ggplot_build(out)
+  label_layer <- built$data[[3]]
+  expect_setequal(label_layer$label, c("CHL", "PER"))
+  expect_equal(nrow(label_layer), 2L)
 })

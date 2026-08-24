@@ -3,6 +3,7 @@
 export(country_info)
 export(metadata)
 export(metadata_dimensions)
+export(metadata_indicators)
 export(metadata_pillars)
 export(spi_aggregates)
 export(spi_change)

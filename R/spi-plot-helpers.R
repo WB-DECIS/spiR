@@ -149,6 +149,7 @@
 
   out <- src[source_id %in% value_cols, .(
     region = as.character(country),
+    region_code = toupper(trimws(as.character(iso3c))),
     date = as.integer(date),
     source_id = as.character(source_id),
     value = suppressWarnings(as.numeric(value))
@@ -243,4 +244,258 @@
   out <- merge(dt, meta_small, by = c("iso3c", "date"), all.x = TRUE, sort = FALSE)
 
   out
+}
+
+
+#' Round a year down to the previous five-year boundary
+#'
+#' @param year Integer or numeric scalar year.
+#' @return Integer year rounded down to a multiple of five.
+#' @keywords internal
+.spi_plot_floor_year_to_five <- function(year) {
+  if ((!is.numeric(year) && !is.integer(year)) || length(year) != 1L || is.na(year)) {
+    cli::cli_abort("{.arg year} must be a single numeric/integer year.")
+  }
+
+  as.integer(floor(as.numeric(year) / 5) * 5)
+}
+
+
+#' Build time-axis specification for SPI charts
+#'
+#' @param dt A plotting `data.table`.
+#' @param year_col Name of the year column.
+#' @param value_col Name of the value column.
+#' @param right_padding Numeric padding added to the right x limit.
+#' @return Named list with `start_year`, `end_year`, `breaks`, and `limits`.
+#' @keywords internal
+.spi_plot_time_axis_spec <- function(dt,
+                                     year_col = "date",
+                                     value_col = "value",
+                                     right_padding = 0.8) {
+  if (!data.table::is.data.table(dt)) {
+    cli::cli_abort("{.arg dt} must be a {.cls data.table}.")
+  }
+  missing_cols <- setdiff(c(year_col, value_col), names(dt))
+  if (length(missing_cols) > 0L) {
+    cli::cli_abort(c(
+      "Missing required plotting columns.",
+      "x" = "Missing columns: {.field {missing_cols}}."
+    ))
+  }
+
+  year_values <- suppressWarnings(as.integer(dt[[year_col]]))
+  if (all(is.na(year_values))) {
+    cli::cli_abort(c(
+      "No valid year values available for plotting.",
+      "x" = "Column {.field {year_col}} contains only missing or invalid values."
+    ))
+  }
+
+  value_num <- suppressWarnings(as.numeric(dt[[value_col]]))
+  valid_idx <- !is.na(year_values) & !is.na(value_num) & is.finite(value_num)
+
+  first_year <- if (any(valid_idx)) {
+    min(year_values[valid_idx], na.rm = TRUE)
+  } else {
+    min(year_values, na.rm = TRUE)
+  }
+
+  end_year <- max(year_values, na.rm = TRUE)
+  start_year <- .spi_plot_floor_year_to_five(first_year)
+  if (end_year < start_year) {
+    end_year <- start_year
+  }
+
+  breaks <- sort(unique(c(seq(start_year, end_year, by = 5L), end_year)))
+  limits <- c(start_year, end_year + as.numeric(right_padding))
+
+  list(
+    start_year = as.integer(start_year),
+    end_year = as.integer(end_year),
+    breaks = as.integer(breaks),
+    limits = as.numeric(limits)
+  )
+}
+
+
+#' Build a shared x scale for year-based SPI charts
+#'
+#' @param dt A plotting `data.table`.
+#' @param year_col Name of the year column.
+#' @param value_col Name of the value column.
+#' @return A `ggplot2::scale_x_continuous` object.
+#' @keywords internal
+.spi_plot_scale_x_year <- function(dt,
+                                   year_col = "date",
+                                   value_col = "value") {
+  axis_spec <- .spi_plot_time_axis_spec(
+    dt = dt,
+    year_col = year_col,
+    value_col = value_col
+  )
+
+  ggplot2::scale_x_continuous(
+    breaks = axis_spec$breaks,
+    limits = axis_spec$limits,
+    expand = ggplot2::expansion(mult = c(0, 0))
+  )
+}
+
+
+#' Select latest non-missing observation per series
+#'
+#' @param dt A plotting `data.table`.
+#' @param series_col Name of the series column.
+#' @param code_col Name of the stable code column for labels.
+#' @param year_col Name of the year column.
+#' @param value_col Name of the value column.
+#' @return A `data.table` containing one latest row per eligible series.
+#' @keywords internal
+.spi_plot_latest_points <- function(dt,
+                                    series_col,
+                                    code_col,
+                                    year_col = "date",
+                                    value_col = "value") {
+  if (!data.table::is.data.table(dt)) {
+    cli::cli_abort("{.arg dt} must be a {.cls data.table}.")
+  }
+  need <- c(series_col, code_col, year_col, value_col)
+  missing_cols <- setdiff(need, names(dt))
+  if (length(missing_cols) > 0L) {
+    cli::cli_abort(c(
+      "Missing required columns for latest-value labels.",
+      "x" = "Missing columns: {.field {missing_cols}}."
+    ))
+  }
+
+  tmp <- data.table::copy(dt)
+  tmp[, (year_col) := suppressWarnings(as.integer(get(year_col)))]
+  tmp[, (value_col) := suppressWarnings(as.numeric(get(value_col)))]
+  tmp <- tmp[!is.na(get(year_col)) & !is.na(get(value_col)) & is.finite(get(value_col))]
+
+  if (nrow(tmp) == 0L) {
+    return(tmp)
+  }
+
+  data.table::setorderv(tmp, c(series_col, year_col), c(1L, 1L))
+  tmp[, .SD[.N], by = series_col]
+}
+
+
+#' Resolve human-readable display label for a SPI source code
+#'
+#' @param value_col Character scalar SPI code.
+#' @param version Character SPI branch.
+#' @return Character scalar display label.
+#' @keywords internal
+.spi_plot_display_label <- function(value_col, version = "master") {
+  if (!is.character(value_col) || length(value_col) != 1L || is.na(value_col)) {
+    cli::cli_abort("{.arg value_col} must be a single non-empty character string.")
+  }
+
+  value_col <- trimws(value_col)
+  if (!nzchar(value_col)) {
+    cli::cli_abort("{.arg value_col} must be a single non-empty character string.")
+  }
+
+  if (identical(value_col, "SPI.INDEX")) {
+    return("SPI Index")
+  }
+
+  .prefix_label <- function(prefix, name_value) {
+    name_value <- trimws(as.character(name_value))
+    if (!nzchar(name_value)) {
+      return(prefix)
+    }
+    if (startsWith(tolower(name_value), tolower(prefix))) {
+      return(name_value)
+    }
+    paste0(prefix, name_value)
+  }
+
+  md <- metadata(version = version)
+
+  pillar_match <- regexec("^SPI\\.INDEX\\.PIL([0-9]+)$", value_col)
+  pillar_parts <- regmatches(value_col, pillar_match)[[1]]
+  if (length(pillar_parts) == 2L) {
+    pillar_num <- pillar_parts[2]
+    pillars <- md[["pillars"]]
+    if (!all(c("pillar", "pillar_name", "pillar_id") %in% names(pillars))) {
+      cli::cli_abort("Pillar metadata is missing required fields for label resolution.")
+    }
+    hit <- pillars[pillar_id == value_col | pillar == pillar_num]
+    if (nrow(hit) == 0L) {
+      cli::cli_abort(c(
+        "Could not resolve pillar label from metadata.",
+        "x" = "Missing metadata for {.val {value_col}}."
+      ))
+    }
+    return(.prefix_label(
+      prefix = paste0("Pillar ", hit$pillar[1], ": "),
+      name_value = hit$pillar_name[1]
+    ))
+  }
+
+  dim_match <- regexec("^SPI\\.DIM([0-9]+\\.[0-9]+)\\.INDEX$", value_col)
+  dim_parts <- regmatches(value_col, dim_match)[[1]]
+  if (length(dim_parts) == 2L) {
+    dim_code <- dim_parts[2]
+    dims <- md[["dimensions"]]
+    if (!all(c("dimension", "dimension_name", "dimension_id") %in% names(dims))) {
+      cli::cli_abort("Dimension metadata is missing required fields for label resolution.")
+    }
+    hit <- dims[dimension_id == value_col | dimension == dim_code]
+    if (nrow(hit) == 0L) {
+      cli::cli_abort(c(
+        "Could not resolve dimension label from metadata.",
+        "x" = "Missing metadata for {.val {value_col}}."
+      ))
+    }
+    return(.prefix_label(
+      prefix = paste0("Dimension ", hit$dimension[1], ": "),
+      name_value = hit$dimension_name[1]
+    ))
+  }
+
+  indicators <- md[["indicators"]]
+  if (!all(c("indicator_id", "indicator_name") %in% names(indicators))) {
+    cli::cli_abort("Indicator metadata is missing required fields for label resolution.")
+  }
+  indicator_hit <- indicators[indicator_id == value_col]
+  if (nrow(indicator_hit) > 0L) {
+    return(.prefix_label(
+      prefix = paste0("Indicator ", value_col, ": "),
+      name_value = indicator_hit$indicator_name[1]
+    ))
+  }
+
+  if (grepl("^SPI\\.", value_col)) {
+    cli::cli_abort(c(
+      "Could not resolve SPI label from metadata.",
+      "x" = "No metadata entry for {.val {value_col}}."
+    ))
+  }
+
+  value_col
+}
+
+
+#' Resolve display labels for multiple SPI source codes
+#'
+#' @param value_cols Character vector of SPI source codes.
+#' @param version Character SPI branch.
+#' @return Named character vector of display labels.
+#' @keywords internal
+.spi_plot_display_labels <- function(value_cols, version = "master") {
+  if (!is.character(value_cols) || length(value_cols) == 0L || anyNA(value_cols)) {
+    cli::cli_abort("{.arg value_cols} must be a non-empty character vector.")
+  }
+
+  labels <- vapply(
+    value_cols,
+    function(x) .spi_plot_display_label(x, version = version),
+    FUN.VALUE = character(1L)
+  )
+  stats::setNames(labels, value_cols)
 }
