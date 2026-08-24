@@ -13,25 +13,19 @@ spi_data(
 )
 }
 \arguments{
-\item{version}{Character. Branch name in the SPI repository. Defaults to
-\code{"master"} (the latest stable version). Use \code{\link[=spi_versions]{spi_versions()}} to list
-available branches.}
+\item{version}{Character scalar naming the SPI data branch. Defaults to
+\code{"master"}.}
 
 \item{country}{Character vector of ISO 3166-1 alpha-3 country codes (e.g.
 \code{c("NOR", "SWE")}). \code{NULL} returns all countries.}
 
-\item{year}{Integer vector of years (e.g. \code{2023:2024}). Applies to all
-types. \code{NULL} returns all years.}
+\item{year}{Numeric or integer vector of years. \code{NULL} returns all years.}
 
-\item{pillar}{Integer (1-5). Restricts indicator columns to the specified
-SPI pillar. For \code{"data"} and \code{"index"}: column subsetting. For
-\code{"aggregates"}: row filtering on \code{source_id}. \code{NULL} returns all
-pillars. Ignored when \code{dimension} is also supplied.}
+\item{pillar}{Optional pillar filter. Accepts a pillar number or SPI pillar
+ID. \code{NULL} returns all pillars.}
 
-\item{dimension}{Character in \code{"P.D"} format (e.g. \code{"5.2"}, \code{"1.5"}).
-Restricts to a specific dimension. More specific than \code{pillar}; when
-both are supplied, \code{dimension} takes precedence. \code{NULL} returns all
-dimensions.}
+\item{dimension}{Optional dimension filter. Accepts a dimension code or SPI
+dimension ID. \code{NULL} returns all dimensions.}
 }
 \value{
 A \code{data.table} in wide format with one row per country-year.

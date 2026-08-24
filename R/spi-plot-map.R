@@ -249,7 +249,8 @@ spi_clear_geo_cache <- function(resolution = NULL) {
 #' @param zoom Logical. If `TRUE`, zoom to the selected countries.
 #' @param interactive Logical. If `TRUE` (default) returns a
 #'   [ggiraph::girafe] widget; if `FALSE` returns a [ggplot2::ggplot].
-#' @param label Optional legend/title label. Defaults to `value_col`.
+#' @param label Optional legend/title label. If `NULL`, a human-readable label
+#'   is derived from indicator metadata; a non-empty string is used directly.
 #' @param version Character. SPI branch. Defaults to `"master"`.
 #' @param resolution Character map resolution (`"medium"` or `"high"`).
 #'
@@ -279,8 +280,9 @@ spi_plot_map <- function(value_col,
     .spi_plot_check_deps("ggiraph")
   }
 
-  if ((!is.numeric(year) && !is.integer(year)) || length(year) != 1L || is.na(year)) {
-    cli::cli_abort("{.arg year} must be a single numeric/integer value.")
+  if ((!is.numeric(year) && !is.integer(year)) || length(year) != 1L ||
+      is.na(year) || !isTRUE(year == floor(year))) {
+    cli::cli_abort("{.arg year} must be a single integer year.")
   }
 
   yr <- as.integer(year)

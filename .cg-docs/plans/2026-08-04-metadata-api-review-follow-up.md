@@ -227,4 +227,3 @@ into focused helpers without changing public behavior.
 - Existing public metadata behavior must change beyond the stated requirements.
 - A required validation cannot be preserved without an API decision.
 - A protected workflow boundary must be modified to proceed.
-

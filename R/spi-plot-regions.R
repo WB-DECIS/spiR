@@ -1,5 +1,18 @@
 # Region-level trend comparison.
 
+# Official geographic regions represented in the SPI aggregate data. Other
+# aggregate rows, such as income groups and World Bank lending groups, are
+# intentionally excluded from this visualization.
+SPI_PLOT_GEOGRAPHIC_REGIONS <- c(
+  "East Asia & Pacific",
+  "Europe & Central Asia",
+  "Latin America & Caribbean",
+  "Middle East & North Africa",
+  "North America",
+  "South Asia",
+  "Sub-Saharan Africa"
+)
+
 #' Compare a SPI column across official SPI regional aggregates over time
 #'
 #' Plots a single SPI column over time with one line per official SPI
@@ -7,8 +20,9 @@
 #' Guide. The title uses metadata-derived SPI names and endpoint labels show
 #' regional aggregate codes.
 #'
-#' @param regions Optional character vector of region names. `NULL`
-#'   (default) plots all available regional aggregates.
+#' @param regions Optional character vector of official geographic region
+#'   names. `NULL` (default) plots the seven main geographic regions. Income
+#'   groups and other World Bank aggregates are not supported.
 #' @param value_col Character scalar. SPI column to plot. Defaults to
 #'   `"SPI.INDEX"`.
 #' @param version Character. SPI branch. Defaults to `"master"`.
@@ -38,6 +52,29 @@ spi_plot_regions <- function(regions = NULL,
     )
   }
   value_col <- trimws(value_col)
+
+  if (is.null(regions)) {
+    regions <- SPI_PLOT_GEOGRAPHIC_REGIONS
+  } else {
+    if (!is.character(regions) || anyNA(regions)) {
+      cli::cli_abort(
+        "{.arg regions} must be a character vector with no NA values."
+      )
+    }
+
+    regions <- unique(trimws(regions))
+    if (length(regions) == 0L || any(!nzchar(regions))) {
+      cli::cli_abort("{.arg regions} must contain at least one region name.")
+    }
+    unsupported <- setdiff(regions, SPI_PLOT_GEOGRAPHIC_REGIONS)
+    if (length(unsupported) > 0L) {
+      cli::cli_abort(c(
+        "Only the seven main geographic regions are supported.",
+        "x" = "Unsupported values: {.val {unsupported}}.",
+        "i" = "Income groups and other World Bank aggregates are not regions."
+      ))
+    }
+  }
 
   region_dt <- .spi_plot_fetch_aggregates(
     value_cols = value_col,

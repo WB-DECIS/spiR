@@ -28,7 +28,8 @@ spi_plot_map(
 \item{interactive}{Logical. If \code{TRUE} (default) returns a
 \link[ggiraph:girafe]{ggiraph::girafe} widget; if \code{FALSE} returns a \link[ggplot2:ggplot]{ggplot2::ggplot}.}
 
-\item{label}{Optional legend/title label. Defaults to \code{value_col}.}
+\item{label}{Optional legend/title label. If \code{NULL}, a human-readable label
+is derived from indicator metadata; a non-empty string is used directly.}
 
 \item{version}{Character. SPI branch. Defaults to \code{"master"}.}
 

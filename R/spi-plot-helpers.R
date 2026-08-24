@@ -85,6 +85,10 @@
   out[, value := data.table::fifelse(value == -99, NA_real_, value)]
 
   if (!is.null(year)) {
+    if ((!is.numeric(year) && !is.integer(year)) || anyNA(year) ||
+        any(year != floor(year))) {
+      cli::cli_abort("{.arg year} must contain only integer-valued years.")
+    }
     keep_year <- as.integer(year)
     out <- out[date %in% keep_year]
   }
@@ -241,6 +245,12 @@
   }
 
   meta_small <- meta[, required, with = FALSE]
+  if (anyDuplicated(meta_small, by = c("iso3c", "date")) > 0L) {
+    cli::cli_abort(c(
+      "Country metadata has duplicate country-year keys.",
+      "x" = "Metadata must contain one row per {.field iso3c}/{.field date} combination."
+    ))
+  }
   out <- merge(dt, meta_small, by = c("iso3c", "date"), all.x = TRUE, sort = FALSE)
 
   out

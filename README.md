@@ -62,6 +62,10 @@ spi_aggregates(region = "Africa Eastern and Southern", pillar = 1L)
 spi_indicator("SPI.D1.5.POV", country = "CHL", year = 2024L)
 spi_indicator(c("SPI.D1.5.POV", "SPI.D2.1.GDDS"), include_raw = TRUE)
 
+# --- Changes over time ---
+scores <- spi_change(spi_index(country = "KEN"))
+scores[, .(date, SPI.INDEX, change_previous, change_first)]
+
 # --- Country-year metadata ---
 country_info(country = "CHL", year = 2024L)
 
@@ -104,6 +108,37 @@ interactive widget.
 | `spi_plot_regions()` | Compare one SPI series across regions over time | `ggplot` |
 | `spi_plot_region_pillars()` | Plot pillar trends for one region using official SPI aggregates | `ggplot` |
 | `spi_plot_map()` | Draw a world choropleth for any SPI column | `ggplot` or `girafe` |
+
+### Change calculations
+
+Use `spi_change()` to add changes from the previous and first valid data years
+to an SPI score table. It works with the wide output of `spi_index()` or with
+any data frame that has a score column, a year column, and one or more grouping
+columns. Missing calendar years are skipped, so changes are calculated between
+the available valid observations rather than between assumed consecutive years.
+
+```r
+ken <- spi_index(country = "KEN")
+ken_changes <- spi_change(ken)
+
+# Use a pillar score and group several countries
+country_changes <- spi_change(
+	spi_index(country = c("KEN", "UGA")),
+	value_col = "SPI.INDEX.PIL1",
+	group_cols = "iso3c",
+	year_col = "date"
+)
+```
+
+The returned table preserves the input columns and adds:
+
+| Column | Meaning |
+|---|---|
+| `change_previous` | Difference from the previous valid year for the same group |
+| `change_first` | Difference from the first valid year for the same group |
+
+The first valid observation has `change_previous = NA` and
+`change_first = 0`. Rows with missing years or scores receive `NA` changes.
 
 ```r
 # Country pillar trajectories

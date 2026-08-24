@@ -308,6 +308,38 @@ ken_long <- melt(
 )
 ```
 
+### Calculating changes over time
+
+Use `spi_change()` when you need period-to-period or cumulative changes for an
+SPI score series. The function adds `change_previous` and `change_first` to the
+input table and groups calculations by country by default. It uses the
+available valid observations, so a missing calendar year does not create a
+false zero or require a complete annual series.
+
+```{r change-over-time}
+# Overall score changes for Kenya
+ken_changes <- spi_change(ken)
+ken_changes[, .(date, SPI.INDEX, change_previous, change_first)]
+```
+
+The first valid score has `change_previous = NA` and `change_first = 0`. Rows
+with missing years or scores retain `NA` for both change columns. To calculate
+changes for a pillar or another grouped series, provide the relevant columns
+explicitly:
+
+```{r change-custom}
+# Pillar 1 changes for two countries
+country_changes <- spi_change(
+  spi_index(country = c("KEN", "UGA")),
+  value_col = "SPI.INDEX.PIL1",
+  group_cols = "iso3c",
+  year_col = "date"
+)
+```
+
+The returned data keeps all input columns, so it can be passed directly to a
+table, summary, or custom visualization workflow.
+
 ### Top and bottom performers
 
 ```{r top-bottom}

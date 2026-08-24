@@ -141,12 +141,23 @@ test_that("spi_plot_radar() returns ggplot", {
   expect_s3_class(out, "ggplot")
 })
 
+test_that("spi_plot_radar() rejects non-integer years", {
+  skip_if_not_installed("ggplot2")
+
+  expect_error(
+    spi_plot_radar(country = "CHL", year = 2024.5),
+    "single integer year"
+  )
+})
+
 test_that("spi_plot_regions() returns ggplot", {
   skip_if_not_installed("ggplot2")
 
+  requested_regions <- NULL
   local_mocked_bindings(
     .spi_plot_check_deps = function(pkgs) invisible(NULL),
-    .spi_plot_fetch_aggregates = function(...) {
+    .spi_plot_fetch_aggregates = function(value_cols, version, region, ...) {
+      requested_regions <<- region
       data.table::data.table(
         region = c("Latin America & Caribbean", "Latin America & Caribbean"),
         date = c(2023L, 2024L),
@@ -159,6 +170,18 @@ test_that("spi_plot_regions() returns ggplot", {
 
   out <- spi_plot_regions(value_col = "SPI.INDEX")
   expect_s3_class(out, "ggplot")
+  expect_setequal(requested_regions, SPI_PLOT_GEOGRAPHIC_REGIONS)
+})
+
+test_that("spi_plot_regions() rejects non-geographic aggregates", {
+  local_mocked_bindings(
+    .spi_plot_check_deps = function(pkgs) invisible(NULL)
+  )
+
+  expect_error(
+    spi_plot_regions(regions = "High income"),
+    "Only the seven main geographic regions are supported"
+  )
 })
 
 test_that("spi_plot_regions() rejects multiple value columns", {

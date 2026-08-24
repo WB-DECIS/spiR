@@ -50,8 +50,9 @@ spi_plot_radar <- function(country,
   if (!is.character(country) || length(country) != 1L || is.na(country)) {
     cli::cli_abort("{.arg country} must be a single character value.")
   }
-  if ((!is.numeric(year) && !is.integer(year)) || length(year) != 1L || is.na(year)) {
-    cli::cli_abort("{.arg year} must be a single numeric/integer value.")
+  if ((!is.numeric(year) && !is.integer(year)) || length(year) != 1L ||
+      is.na(year) || !isTRUE(year == floor(year))) {
+    cli::cli_abort("{.arg year} must be a single integer year.")
   }
 
   pillars <- paste0("SPI.INDEX.PIL", 1:5)

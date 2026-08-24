@@ -126,9 +126,10 @@ spi_get <- function(type = "data",
   }
 
   if (!is.null(year)) {
-    if ((!is.numeric(year) && !is.integer(year)) || anyNA(year))
+    if ((!is.numeric(year) && !is.integer(year)) || anyNA(year) ||
+        any(year != floor(year)))
       cli::cli_abort(c(
-        "{.arg year} must be a numeric or integer vector with no NA values.",
+        "{.arg year} must be an integer-valued numeric or integer vector with no NA values.",
         "x" = "You supplied a {.cls {class(year)[1L]}}."
       ))
     if (any(year < 2016L))

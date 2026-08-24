@@ -294,7 +294,7 @@ test_that("metadata loader normalizes spaced and punctuated headers", {
 
   expect_s3_class(result$indicators, "data.table")
   expect_true(all(c("pillar_name", "dimension_id", "indicator_abv") %in%
-    names(.spi_read_metadata())))
+    names(result$indicators)))
 })
 
 test_that("metadata loader rejects normalized header collisions", {

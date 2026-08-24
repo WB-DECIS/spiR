@@ -7,8 +7,9 @@
 spi_plot_regions(regions = NULL, value_col = "SPI.INDEX", version = "master")
 }
 \arguments{
-\item{regions}{Optional character vector of region names. \code{NULL}
-(default) plots all available regional aggregates.}
+\item{regions}{Optional character vector of official geographic region
+names. \code{NULL} (default) plots the seven main geographic regions. Income
+groups and other World Bank aggregates are not supported.}
 
 \item{value_col}{Character scalar. SPI column to plot. Defaults to
 \code{"SPI.INDEX"}.}
